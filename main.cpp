@@ -98,6 +98,8 @@ int charToInt(char ch)
     return retrn;
 }
 
+using vec2 = vec2;
+
 struct CordinateEcef
 {
     //meter type
@@ -157,9 +159,9 @@ int TriOU(CordinateEcef s, CordinateEcef r)//Triakis Octahedron Uzaklık
     return absX + absY + absZ + el1;
 }
 
-std::vector<std::vector<int>> magicMatris(int i)
+vec2 magicMatris(int i)
 {
-    std::vector<std::vector<int>> matris;
+    vec2 matris;
     matris.resize(4);for(int i = 0; i < matris.size() ; ++i) matris[i].resize(4);
 
     switch(i)
@@ -229,9 +231,9 @@ std::vector<std::vector<int>> magicMatris(int i)
     return matris;    
 } 
 
-std::vector<std::vector<int>> hadamardMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B)//sadece 4x4 lerde işe yarıyo
+vec2 hadamardMul(vec2 A, vec2 B)//sadece 4x4 lerde işe yarıyo
 {
-    std::vector<std::vector<int>> matris;
+    vec2 matris;
     matris.resize(4); for(int i = 0 ; i < matris.size(); ++i) matris[i].resize(4);
 
     for(int i = 0 ; i < matris.size(); ++i)
@@ -241,10 +243,10 @@ std::vector<std::vector<int>> hadamardMul(std::vector<std::vector<int>> A, std::
     return matris;
 }
 
-std::vector<std::vector<int>> kroneckerMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B) // kare matris varsayımı
+vec2 kroneckerMul(vec2 A, vec2 B) // matrisler kare olarak varsayıldı
 {
     int l = A.size() * B.size();
-    std::vector<std::vector<int>> matris(l); 
+    vec2 matris(l); 
     for(int i = 0 ; i < l; ++i) matris[i].resize(l);
     
     for(int a = 0; a < A.size(); ++a)
@@ -256,13 +258,85 @@ std::vector<std::vector<int>> kroneckerMul(std::vector<std::vector<int>> A, std:
     return matris;
 }
 
-
-std::vector<std::vector<int>> tracySinghMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B)
+vec2 subMatrix(const vec2& M, int r, int c)//tracySinghMul için yardımcı fonksiyon
 {
+    vec2 S(2, std::vector<int>(2));
+    S[0][0] = M[r][c];
+    S[0][1] = M[r][c + 1];
+    S[1][0] = M[r + 1][c];
+    S[1][1] = M[r + 1][c + 1];
+    return S;
+}
+
+//bu fonksiyon daha bitmedi yapım aşamasında : 
+vec2 tracySinghMul(vec2 A, vec2 B)//matrislerin ikisi de 4*4 diye varsayılıyor
+{
+    vec2 retrMatris; retrMatris.resize(16);
+    for(int i = 0; i < retrMatris.size(); ++i) retrMatris[i].resize(16);
+    //sonuç olarak 16*16 lık dev bir matris çıkıyo
+
+    std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
+    matrisPairs.resize(4);
+    for (int i = 0; i < 4; ++i)
+    {
+        matrisPairs[i].resize(4);
+        for (int j = 0; j < 4; ++j)
+        {
+            matrisPairs[i][j].first.resize(2);
+            matrisPairs[i][j].second.resize(2);
+
+            for (int r = 0; r < 2; ++r)
+            {
+                matrisPairs[i][j].first[r].resize(2);
+                matrisPairs[i][j].second[r].resize(2);
+            }
+        }
+    }
+
+    vec2 A11 = subMatrix(A, 0, 0);
+    vec2 A12 = subMatrix(A, 0, 2);
+    vec2 A21 = subMatrix(A, 2, 0);
+    vec2 A22 = subMatrix(A, 2, 2);
+
+    vec2 B11 = subMatrix(B, 0, 0);
+    vec2 B12 = subMatrix(B, 0, 2);
+    vec2 B21 = subMatrix(B, 2, 0);
+    vec2 B22 = subMatrix(B, 2, 2);
+
+    matrisPairs[0][0] = {A11, B11};
+    matrisPairs[0][1] = {A11, B12};
+    matrisPairs[0][2] = {A12, B11};
+    matrisPairs[0][3] = {A12, B12};
+
+    matrisPairs[1][0] = {A11, B21};
+    matrisPairs[1][1] = {A11, B22};
+    matrisPairs[1][2] = {A12, B21};
+    matrisPairs[1][3] = {A12, B22};
+
+    matrisPairs[2][0] = {A21, B11};
+    matrisPairs[2][1] = {A21, B12};
+    matrisPairs[2][2] = {A22, B11};
+    matrisPairs[2][3] = {A22, B12};
+
+    matrisPairs[3][0] = {A21, B21};
+    matrisPairs[3][1] = {A21, B22};
+    matrisPairs[3][2] = {A22, B21};
+    matrisPairs[3][3] = {A22, B22};
+
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            retrMatris[i][j] = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
+            
+        }
+    }
+
+    return retrMatris;
 
 }
 
-std::vector<std::vector<int>> khatriRaoMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B)
+vec2 khatriRaoMul(vec2 A, vec2 B)
 {
 
 }
