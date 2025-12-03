@@ -157,6 +157,78 @@ int TriOU(CordinateEcef s, CordinateEcef r)//Triakis Octahedron Uzaklık
     return absX + absY + absZ + el1;
 }
 
+std::vector<std::vector<int>> magicMatris(int i)
+{
+    std::vector<std::vector<int>> matris;
+    matris.resize(4);for(int i = 0; i < matris.size() ; ++i) matris[i].resize(4);
+
+    switch(i)
+    {
+        case 0:
+            matris[0] = {16,2,3,13};
+            matris[1] = {5,11,10,8};
+            matris[2] = {9,7,6,12};
+            matris[3] = {4,14,15,1};
+            break;
+        case 1:
+            matris[0] = {16,9,5,4};
+            matris[1] = {2,7,11,14};
+            matris[2] = {3,6,10,15};
+            matris[3] = {13,12,8,1};
+            break;
+        case 2:
+            matris[0] = {13,8,12,1};
+            matris[1] = {2,11,7,14};
+            matris[2] = {3,10,6,15};
+            matris[3] = {16,5,9,4};
+            break;
+        case 3:
+            matris[0] = {4,5,9,16};
+            matris[1] = {14,11,7,2};
+            matris[2] = {15,10,6,3};
+            matris[3] = {1,8,12,13};
+            break;
+        case 4:
+            matris[0] = {13,2,3,16};
+            matris[1] = {12,7,6,9};
+            matris[2] = {8,11,10,5};
+            matris[3] = {4,5,9,16};
+            break;
+        case 5:
+            matris[0] = {13,2,3,16};
+            matris[1] = {8,11,10,5};
+            matris[2] = {12,7,6,9};
+            matris[3] = {1,14,15,4};
+            break;
+        case 6:
+            matris[0] = {16,5,9,4};
+            matris[1] = {2,11,7,14};
+            matris[2] = {3,10,6,15};
+            matris[3] = {13,8,12,1};
+            break;
+        case 7:
+            matris[0] = {4,14,15,1};
+            matris[1] = {5,11,10,8};
+            matris[2] = {9,7,6,12};
+            matris[3] = {16,2,3,13};
+            break;
+        case 8:
+            matris[0] = {1,8,12,13};
+            matris[1] = {14,11,7,2};
+            matris[2] = {15,10,7,2};
+            matris[3] = {15,10,6,3};
+            break;
+        case 9:
+            matris[0] = {1,14,15,4};
+            matris[1] = {8,1,10,5};
+            matris[2] = {12,7,6,9};
+            matris[3] = {13,2,3,16};
+            break;
+    }
+
+    return matris;    
+} 
+
 signed main()
 {
     auto now = std::chrono::system_clock::now();
