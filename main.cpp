@@ -229,6 +229,44 @@ std::vector<std::vector<int>> magicMatris(int i)
     return matris;    
 } 
 
+std::vector<std::vector<int>> hadamardMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B)//sadece 4x4 lerde işe yarıyo
+{
+    std::vector<std::vector<int>> matris;
+    matris.resize(4); for(int i = 0 ; i < matris.size(); ++i) matris[i].resize(4);
+
+    for(int i = 0 ; i < matris.size(); ++i)
+        for(int j = 0 ; j < matris.size(); ++j)
+            matris[i][j] = A[i][j] * B[i][j];
+
+    return matris;
+}
+
+std::vector<std::vector<int>> kroneckerMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B) // kare matris varsayımı
+{
+    int l = A.size() * B.size();
+    std::vector<std::vector<int>> matris(l); 
+    for(int i = 0 ; i < l; ++i) matris[i].resize(l);
+    
+    for(int a = 0; a < A.size(); ++a)
+        for(int b = 0; b < A.size(); ++b)
+            for(int i = 0; i < B.size(); ++i)
+                for(int j = 0; j < B.size(); ++j)
+                    matris[a * B.size() + i][b * B.size() + j] = A[a][b] * B[i][j];
+    
+    return matris;
+}
+
+
+std::vector<std::vector<int>> tracySinghMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B)
+{
+
+}
+
+std::vector<std::vector<int>> khatriRaoMul(std::vector<std::vector<int>> A, std::vector<std::vector<int>> B)
+{
+
+}
+
 signed main()
 {
     auto now = std::chrono::system_clock::now();
