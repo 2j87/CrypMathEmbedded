@@ -4,6 +4,7 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 using vec2 = std::vector<std::vector<int>>;
 
@@ -278,6 +279,9 @@ vec2 kroneckerMul(const vec2& A, const vec2& B)
 //alt matrisin (2*2) sol üst köşesini alıp alt matrisi döndürür
 vec2 subMatrix(const vec2& M, int r, int c)
 {
+    if (r + 1 >= static_cast<int>(M.size()) || c + 1 >= static_cast<int>(M[0].size()))
+        throw std::out_of_range("subMatrix: indices out of range");
+
     vec2 S(2, std::vector<int>(2));
     S[0][0] = M[r][c];
     S[0][1] = M[r][c + 1];
@@ -363,11 +367,11 @@ vec2 tracySinghMul(vec2 A, vec2 B)
 }
 
 //Khatri-Rao matris çarpımı (kroneckerMul kullanılarak)
-//lanet nie öncekine benzio
+//A ve B 4*4 varsayıldı
 vec2 khatriRaoMul(vec2 A, vec2 B)
 {
-    vec2 returnMatris; returnMatris.resize(4);
-    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(4);
+    vec2 returnMatris; returnMatris.resize(8);
+    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(8);
     //son matris 4*4
 
     std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
@@ -425,10 +429,10 @@ signed main()
 {
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
-    std::tm* localTime = std::localtime(&t);
+    std::tm* time = std::localtime(&t);
     //time->tm_hour // saat
     //time->tm_min // dakika
-    //std::cout << localTime->tm_hour << "\n";
+    //std::cout << time->tm_hour << "\n";
 
     std::string input;
     std::cin >> input;
@@ -443,5 +447,5 @@ signed main()
     //
 
 
-    return 0;
+
 }
