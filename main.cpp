@@ -103,9 +103,9 @@ using vec2 = std::vector<std::vector<int>>;
 struct CordinateEcef
 {
     //meter type
-    int x;
-    int y;
-    int z;
+    double x;
+    double y;
+    double z;
 };
 
 struct CordinateGps
@@ -114,47 +114,51 @@ struct CordinateGps
     int GpsLon;//Boylam x1 000 000 degree
 };
 
-int DisDU(CordinateEcef s, CordinateEcef r)//Disdyakis Dodecahedron Uzaklık
+//Disdyakis Dodecahedron distance
+int DisDU(CordinateEcef s, CordinateEcef r)
 {
-    int absX = std::abs(s.x - s.x);
-    int absY = std::abs(s.y - s.y);
-    int absZ = std::abs(s.z - s.z);
+    double absX = std::abs(s.x - r.x);
+    double absY = std::abs(s.y - r.y);
+    double absZ = std::abs(s.z - r.z);
 
-    int el1 = std::max(absX, absY, absZ);
-    int el2 = (std::sqrt(2) - 1) * std::min(absX + absY , absY + absZ, absZ + absX);
-    int el3 = (std::sqrt(2) - 2 * std::sqrt(2) + 1 ) * std::min(absX, absY, absZ);
+    double el1 = std::max({absX, absY, absZ});
+    double el2 = (std::sqrt(2.0) - 1.0) * std::min({absX + absY , absY + absZ, absZ + absX});
+    double el3 = (std::sqrt(2.0) - 2.0 * std::sqrt(2.0) + 1.0 ) * std::min({absX, absY, absZ});
 
     return el1 + el2 + el3;
 }
 
-int TetHU(CordinateEcef s, CordinateEcef r)//Tetrakis Hexahedron Uzaklık
+//Tetrakis Hexahedron Uzaklık
+int TetHU(CordinateEcef s, CordinateEcef r)
 {
-    int absX = std::abs(s.x - s.x);
-    int absY = std::abs(s.y - s.y);
-    int absZ = std::abs(s.z - s.z);
+    double absX = std::abs(s.x - r.x);
+    double absY = std::abs(s.y - r.y);
+    double absZ = std::abs(s.z - r.z);
 
-    int el1 = (std::sqrt(3) - 1) * std::max(absX + absY, absX + absZ, absY + absY);
-    int el2 = (std::sqrt(3) - 1) * std::max(absX, absY, absZ);
+    double el1 = (std::sqrt(3.0) - 1.0) * std::max({absX + absY, absX + absZ, absY + absZ});
+    double el2 = (std::sqrt(3.0) - 1.0) * std::max({absX, absY, absZ});
 
     return el1 + el2;
 }
 
-int TruOU(CordinateEcef s, CordinateEcef r)//Truncated Octahedron Uzaklık
+//Truncated Octahedron Uzaklık
+int TruOU(CordinateEcef s, CordinateEcef r)
 {
-    int absX = std::abs(s.x - s.x);
-    int absY = std::abs(s.y - s.y);
-    int absZ = std::abs(s.z - s.z);
+    double absX = std::abs(s.x - r.x);
+    double absY = std::abs(s.y - r.y);
+    double absZ = std::abs(s.z - r.z);
 
-    return std::max((2/3*(absX + absY + absZ)), std::max(absX, absY, absZ));
+    return std::max((2.0/3.0*(absX + absY + absZ)), std::max({absX, absY, absZ}));
 }
 
-int TriOU(CordinateEcef s, CordinateEcef r)//Triakis Octahedron Uzaklık
+//Triakis Octahedron Uzaklık
+int TriOU(CordinateEcef s, CordinateEcef r)
 {
-    int absX = std::abs(s.x - s.x);
-    int absY = std::abs(s.y - s.y);
-    int absZ = std::abs(s.z - s.z);
+    double absX = std::abs(s.x - r.x);
+    double absY = std::abs(s.y - r.y);
+    double absZ = std::abs(s.z - r.z);
 
-    int el1 = (std::sqrt(2) - 2) * std::min(absX, absY, absZ);
+    double el1 = (std::sqrt(2.0) - 2.0) * std::min({absX, absY, absZ});
 
     return absX + absY + absZ + el1;
 }
@@ -231,7 +235,8 @@ vec2 magicMatris(int i)
     return matris;    
 } 
 
-vec2 hadamardMul(vec2 A, vec2 B)//sadece 4x4 lerde işe yarıyo
+//sadece 4x4 lerde işe yarıyo
+vec2 hadamardMul(vec2 A, vec2 B)
 {
     vec2 matris;
     matris.resize(4); for(int i = 0 ; i < matris.size(); ++i) matris[i].resize(4);
@@ -243,22 +248,33 @@ vec2 hadamardMul(vec2 A, vec2 B)//sadece 4x4 lerde işe yarıyo
     return matris;
 }
 
-vec2 kroneckerMul(vec2 A, vec2 B) // matrisler kare olarak varsayıldı
+//Kronecker 
+vec2 kroneckerMul(const vec2& A, const vec2& B)
 {
-    int l = A.size() * B.size();
-    vec2 matris(l); 
-    for(int i = 0 ; i < l; ++i) matris[i].resize(l);
-    
-    for(int a = 0; a < A.size(); ++a)
-        for(int b = 0; b < A.size(); ++b)
-            for(int i = 0; i < B.size(); ++i)
-                for(int j = 0; j < B.size(); ++j)
-                    matris[a * B.size() + i][b * B.size() + j] = A[a][b] * B[i][j];
-    
-    return matris;
+    int rowsA = A.size();
+    int colsA = rowsA == 0 ? 0 : A[0].size();
+
+    int rowsB = B.size();
+    int colsB = rowsB == 0 ? 0 : B[0].size();
+
+    int rowsR = rowsA * rowsB;
+    int colsR = colsA * colsB;
+    vec2 returnMatris(rowsR);
+    for (int i = 0; i < rowsR; ++i) returnMatris[i].resize(colsR);
+
+    for (int a = 0; a < rowsA; ++a)
+        for (int b = 0; b < colsA; ++b)
+            for (int i = 0; i < rowsB; ++i)
+                for (int j = 0; j < colsB; ++j)
+                    returnMatris[a * rowsB + i][b * colsB + j] = A[a][b] * B[i][j];
+
+                    
+    return returnMatris;
 }
 
-vec2 subMatrix(const vec2& M, int r, int c)//tracySinghMul için yardımcı fonksiyon
+//tracySinghMul için yardımcı fonksiyon
+//alt matrisin (2*2) sol üst köşesini alıp alt matrisi döndürür
+vec2 subMatrix(const vec2& M, int r, int c)
 {
     vec2 S(2, std::vector<int>(2));
     S[0][0] = M[r][c];
@@ -268,12 +284,14 @@ vec2 subMatrix(const vec2& M, int r, int c)//tracySinghMul için yardımcı fonk
     return S;
 }
 
-// yesss bu da bitti
-vec2 tracySinghMul(vec2 A, vec2 B)//matrislerin ikisi de 4*4 diye varsayılıyor
+//Tracy Singh matris çarpımı
+//matrislerin ikisi de 4*4 diye varsayılıyor
+
+vec2 tracySinghMul(vec2 A, vec2 B)
 {
-    vec2 retrMatris; retrMatris.resize(16);
-    for(int i = 0; i < retrMatris.size(); ++i) retrMatris[i].resize(16);
-    //sonuç olarak 16*16 lık dev bir matris çıkıyo
+    vec2 returnMatris; returnMatris.resize(16);
+    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(16);
+    //final matris size is 16*16
 
     std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
     matrisPairs.resize(4);
@@ -323,26 +341,82 @@ vec2 tracySinghMul(vec2 A, vec2 B)//matrislerin ikisi de 4*4 diye varsayılıyor
     matrisPairs[3][2] = {A22, B21};
     matrisPairs[3][3] = {A22, B22};
 
+
     for (int i = 0; i < 4; ++i)
     {
         for (int j = 0; j < 4; ++j)
         {
-            // (i,j) -> kronecker çarpımı yapayor 
+            // (i,j) -> kronecker çarpımı
             vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
-            int blockSize = static_cast<int>(tmp.size()); // güvenli tür dönüşümü
+            int blockSize = static_cast<int>(tmp.size());// save type translation
+
             for (int k = 0; k < blockSize; ++k)
                 for (int l = 0; l < blockSize; ++l)
-                    retrMatris[i * blockSize + k][j * blockSize + l] = tmp[k][l];
+                    returnMatris[i * blockSize + k][j * blockSize + l] = tmp[k][l];
         }
     }
 
-    return retrMatris;
+    return returnMatris;
 
 }
 
+//Khatri-Rao matris çarpımı (kroneckerMul kullanılarak)
+//lanet nie öncekine benzio
 vec2 khatriRaoMul(vec2 A, vec2 B)
 {
+    vec2 returnMatris; returnMatris.resize(4);
+    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(4);
+    //son matris 4*4
 
+    std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
+    matrisPairs.resize(2);
+    for (int i = 0; i < 2; ++i)
+    {
+        matrisPairs[i].resize(2);
+        for (int j = 0; j < 2; ++j)
+        {
+            matrisPairs[i][j].first.resize(2);
+            matrisPairs[i][j].second.resize(2);
+
+            for (int r = 0; r < 2; ++r)
+            {
+                matrisPairs[i][j].first[r].resize(2);
+                matrisPairs[i][j].second[r].resize(2);
+            }
+        }
+    }
+
+    vec2 A11 = subMatrix(A, 0, 0);
+    vec2 A12 = subMatrix(A, 0, 2);
+    vec2 A21 = subMatrix(A, 2, 0);
+    vec2 A22 = subMatrix(A, 2, 2);
+
+    vec2 B11 = subMatrix(B, 0, 0);
+    vec2 B12 = subMatrix(B, 0, 2);
+    vec2 B21 = subMatrix(B, 2, 0);
+    vec2 B22 = subMatrix(B, 2, 2);
+
+    matrisPairs[0][0] = {A11, B11};
+    matrisPairs[0][1] = {A11, B12};
+    matrisPairs[1][0] = {A12, B11};
+    matrisPairs[1][1] = {A12, B12};
+
+    for (int i = 0; i < 2; ++i)
+    {
+        for (int j = 0; j < 1; ++j)
+        {
+            // (i,j) -> kronecker çarpımı
+            vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
+            int blockSize = static_cast<int>(tmp.size());// save type translation
+
+            for (int k = 0; k < blockSize; ++k)
+                for (int l = 0; l < blockSize; ++l)
+                    returnMatris[i * blockSize + k][j * blockSize + l] = tmp[k][l];
+        }
+    }
+
+    
+    return returnMatris;
 }
 
 signed main()
@@ -361,6 +435,7 @@ signed main()
     for(int i = 0 ; i < vecint.size() ; ++i) vecint[i] = charToInt(input[i]);
     
     //GPS to ECEF
+    //örnek koordinatlar
     CordinateEcef SenderCord = {4113913, 3440529, 3440829};
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
     //
