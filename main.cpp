@@ -4,7 +4,6 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
-#include <stdexcept>
 
 using vec2 = std::vector<std::vector<int>>;
 
@@ -279,9 +278,6 @@ vec2 kroneckerMul(const vec2& A, const vec2& B)
 //alt matrisin (2*2) sol üst köşesini alıp alt matrisi döndürür
 vec2 subMatrix(const vec2& M, int r, int c)
 {
-    if (r + 1 >= static_cast<int>(M.size()) || c + 1 >= static_cast<int>(M[0].size()))
-        throw std::out_of_range("subMatrix: indices out of range");
-
     vec2 S(2, std::vector<int>(2));
     S[0][0] = M[r][c];
     S[0][1] = M[r][c + 1];
@@ -370,17 +366,9 @@ vec2 tracySinghMul(vec2 A, vec2 B)
 //lanet nie öncekine benzio
 vec2 khatriRaoMul(vec2 A, vec2 B)
 {
-    // Determine block size from one sub-block's Kronecker result
-    vec2 A11 = subMatrix(A, 0, 0);
-    vec2 B11 = subMatrix(B, 0, 0);
-    vec2 tmp0 = kroneckerMul(A11, B11);
-    int blockSize = static_cast<int>(tmp0.size());
-
-    int rowsR = blockSize * 2;
-    int colsR = blockSize * 2;
-    vec2 returnMatris(rowsR);
-    for (int i = 0; i < rowsR; ++i) returnMatris[i].resize(colsR);
-    // final matrix size is rowsR x colsR
+    vec2 returnMatris; returnMatris.resize(4);
+    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(4);
+    //son matris 4*4
 
     std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
     matrisPairs.resize(2);
@@ -400,10 +388,12 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
         }
     }
 
+    vec2 A11 = subMatrix(A, 0, 0);
     vec2 A12 = subMatrix(A, 0, 2);
     vec2 A21 = subMatrix(A, 2, 0);
     vec2 A22 = subMatrix(A, 2, 2);
 
+    vec2 B11 = subMatrix(B, 0, 0);
     vec2 B12 = subMatrix(B, 0, 2);
     vec2 B21 = subMatrix(B, 2, 0);
     vec2 B22 = subMatrix(B, 2, 2);
@@ -419,6 +409,7 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
         {
             // (i,j) -> kronecker çarpımı
             vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
+            int blockSize = static_cast<int>(tmp.size());// save type translation
 
             for (int k = 0; k < blockSize; ++k)
                 for (int l = 0; l < blockSize; ++l)
