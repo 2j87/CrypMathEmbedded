@@ -73,7 +73,7 @@ int charToInt(char ch)
         case ',': retrn = arr[55]; break;
         case ';': retrn = arr[56]; break;
         case ':': retrn = arr[57]; break;
-        case '\'': retrn = arr[58]; break;
+        case '\'':retrn = arr[58]; break;
         case '@': retrn = arr[59]; break;
         case '"': retrn = arr[60]; break;
         case '?': retrn = arr[61]; break;
@@ -98,7 +98,7 @@ int charToInt(char ch)
     return retrn;
 }
 
-using vec2 = vec2;
+using vec2 = std::vector<std::vector<int>>;
 
 struct CordinateEcef
 {
@@ -268,7 +268,7 @@ vec2 subMatrix(const vec2& M, int r, int c)//tracySinghMul için yardımcı fonk
     return S;
 }
 
-//bu fonksiyon daha bitmedi yapım aşamasında : 
+// yesss bu da bitti
 vec2 tracySinghMul(vec2 A, vec2 B)//matrislerin ikisi de 4*4 diye varsayılıyor
 {
     vec2 retrMatris; retrMatris.resize(16);
@@ -327,8 +327,12 @@ vec2 tracySinghMul(vec2 A, vec2 B)//matrislerin ikisi de 4*4 diye varsayılıyor
     {
         for (int j = 0; j < 4; ++j)
         {
-            retrMatris[i][j] = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
-            
+            // (i,j) -> kronecker çarpımı yapayor 
+            vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
+            int blockSize = static_cast<int>(tmp.size()); // güvenli tür dönüşümü
+            for (int k = 0; k < blockSize; ++k)
+                for (int l = 0; l < blockSize; ++l)
+                    retrMatris[i * blockSize + k][j * blockSize + l] = tmp[k][l];
         }
     }
 
