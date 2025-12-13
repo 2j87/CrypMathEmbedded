@@ -4,6 +4,9 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
+
+using vec2 = std::vector<std::vector<int>>;
 
 int charToInt(char ch)
 {
@@ -98,8 +101,6 @@ int charToInt(char ch)
     return retrn;
 }
 
-using vec2 = std::vector<std::vector<int>>;
-
 struct CordinateEcef
 {
     //meter type
@@ -125,7 +126,7 @@ int DisDU(CordinateEcef s, CordinateEcef r)
     double el2 = (std::sqrt(2.0) - 1.0) * std::min({absX + absY , absY + absZ, absZ + absX});
     double el3 = (std::sqrt(2.0) - 2.0 * std::sqrt(2.0) + 1.0 ) * std::min({absX, absY, absZ});
 
-    return el1 + el2 + el3;
+    return std::lround(el1 + el2 + el3);
 }
 
 //Tetrakis Hexahedron Uzaklık
@@ -138,7 +139,7 @@ int TetHU(CordinateEcef s, CordinateEcef r)
     double el1 = (std::sqrt(3.0) - 1.0) * std::max({absX + absY, absX + absZ, absY + absZ});
     double el2 = (std::sqrt(3.0) - 1.0) * std::max({absX, absY, absZ});
 
-    return el1 + el2;
+    return std::lround(el1 + el2);
 }
 
 //Truncated Octahedron Uzaklık
@@ -148,7 +149,7 @@ int TruOU(CordinateEcef s, CordinateEcef r)
     double absY = std::abs(s.y - r.y);
     double absZ = std::abs(s.z - r.z);
 
-    return std::max((2.0/3.0*(absX + absY + absZ)), std::max({absX, absY, absZ}));
+    return std::lround(std::max((2.0/3.0*(absX + absY + absZ)), std::max({absX, absY, absZ})));
 }
 
 //Triakis Octahedron Uzaklık
@@ -160,13 +161,14 @@ int TriOU(CordinateEcef s, CordinateEcef r)
 
     double el1 = (std::sqrt(2.0) - 2.0) * std::min({absX, absY, absZ});
 
-    return absX + absY + absZ + el1;
+    return std::lround(absX + absY + absZ + el1);
 }
 
 vec2 magicMatris(int i)
 {
     vec2 matris;
-    matris.resize(4);for(int i = 0; i < matris.size() ; ++i) matris[i].resize(4);
+    matris.resize(4);
+    for(int i = 0; i < matris.size() ; ++i) matris[i].resize(4);
 
     switch(i)
     {
@@ -248,7 +250,8 @@ vec2 hadamardMul(vec2 A, vec2 B)
     return matris;
 }
 
-//Kronecker 
+//Kronecker
+//added rectangle multiples
 vec2 kroneckerMul(const vec2& A, const vec2& B)
 {
     int rowsA = A.size();
@@ -276,6 +279,9 @@ vec2 kroneckerMul(const vec2& A, const vec2& B)
 //alt matrisin (2*2) sol üst köşesini alıp alt matrisi döndürür
 vec2 subMatrix(const vec2& M, int r, int c)
 {
+    if (r + 1 >= static_cast<int>(M.size()) || c + 1 >= static_cast<int>(M[0].size()))
+        throw std::out_of_range("subMatrix: indices out of range");
+
     vec2 S(2, std::vector<int>(2));
     S[0][0] = M[r][c];
     S[0][1] = M[r][c + 1];
@@ -364,9 +370,17 @@ vec2 tracySinghMul(vec2 A, vec2 B)
 //lanet nie öncekine benzio
 vec2 khatriRaoMul(vec2 A, vec2 B)
 {
-    vec2 returnMatris; returnMatris.resize(4);
-    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(4);
-    //son matris 4*4
+    // Determine block size from one sub-block's Kronecker result
+    vec2 A11 = subMatrix(A, 0, 0);
+    vec2 B11 = subMatrix(B, 0, 0);
+    vec2 tmp0 = kroneckerMul(A11, B11);
+    int blockSize = static_cast<int>(tmp0.size());
+
+    int rowsR = blockSize * 2;
+    int colsR = blockSize * 2;
+    vec2 returnMatris(rowsR);
+    for (int i = 0; i < rowsR; ++i) returnMatris[i].resize(colsR);
+    // final matrix size is rowsR x colsR
 
     std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
     matrisPairs.resize(2);
@@ -386,12 +400,10 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
         }
     }
 
-    vec2 A11 = subMatrix(A, 0, 0);
     vec2 A12 = subMatrix(A, 0, 2);
     vec2 A21 = subMatrix(A, 2, 0);
     vec2 A22 = subMatrix(A, 2, 2);
 
-    vec2 B11 = subMatrix(B, 0, 0);
     vec2 B12 = subMatrix(B, 0, 2);
     vec2 B21 = subMatrix(B, 2, 0);
     vec2 B22 = subMatrix(B, 2, 2);
@@ -403,11 +415,10 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
 
     for (int i = 0; i < 2; ++i)
     {
-        for (int j = 0; j < 1; ++j)
+        for (int j = 0; j < 2; ++j)
         {
             // (i,j) -> kronecker çarpımı
             vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
-            int blockSize = static_cast<int>(tmp.size());// save type translation
 
             for (int k = 0; k < blockSize; ++k)
                 for (int l = 0; l < blockSize; ++l)
@@ -423,10 +434,10 @@ signed main()
 {
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
-    std::tm* time = std::localtime(&t);
+    std::tm* localTime = std::localtime(&t);
     //time->tm_hour // saat
     //time->tm_min // dakika
-    //std::cout << time->tm_hour << "\n";
+    //std::cout << localTime->tm_hour << "\n";
 
     std::string input;
     std::cin >> input;
@@ -441,5 +452,5 @@ signed main()
     //
 
 
-
+    return 0;
 }
