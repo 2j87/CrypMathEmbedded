@@ -164,6 +164,7 @@ int TriOU(CordinateEcef s, CordinateEcef r)
     return std::lround(absX + absY + absZ + el1);
 }
 
+//magix Matrises
 vec2 magicMatris(int i)
 {
     vec2 matris;
@@ -447,8 +448,7 @@ signed main()
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
     */
 
-    // YAPAY ZEKANIN TEST ŞEYİ:
-    // Quick test harness: build 4x4 A,B and show A11,B11, kronecker(A11,B11) and khatriRaoMul(A,B)
+    //Matris multiples test example:
     auto now = std::chrono::system_clock::now(); (void)now;
 
     auto printMat = [](const vec2& M, const std::string& name){
@@ -483,6 +483,9 @@ signed main()
 
     vec2 kh = khatriRaoMul(A, B);
     printMat(kh, "khatriRaoMul(A,B)");
+
+    vec2 tracy = tracySinghMul(A, B);
+    printMat(tracy, "tracySingh(A,B)");
 
     return 0;
 }
