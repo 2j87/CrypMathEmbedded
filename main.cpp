@@ -427,6 +427,7 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
 
 signed main()
 {
+    /*
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     std::tm* time = std::localtime(&t);
@@ -444,8 +445,44 @@ signed main()
     //örnek koordinatlar
     CordinateEcef SenderCord = {4113913, 3440529, 3440829};
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
-    //
+    */
 
+    // YAPAY ZEKANIN TEST ŞEYİ:
+    // Quick test harness: build 4x4 A,B and show A11,B11, kronecker(A11,B11) and khatriRaoMul(A,B)
+    auto now = std::chrono::system_clock::now(); (void)now;
 
+    auto printMat = [](const vec2& M, const std::string& name){
+        std::cout << name << " (" << M.size() << " x " << (M.empty()?0:M[0].size()) << "):\n";
+        for (size_t i = 0; i < M.size(); ++i) {
+            for (size_t j = 0; j < M[i].size(); ++j) std::cout << M[i][j] << ' ';
+            std::cout << '\n';
+        }
+        std::cout << "---\n";
+    };
 
+    // create A and B 4x4
+    vec2 A(4, std::vector<int>(4));
+    vec2 B(4, std::vector<int>(4));
+    int v = 1;
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+            A[i][j] = v++;
+    v = 101;
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+            B[i][j] = v++;
+
+    // subblocks
+    vec2 A11 = subMatrix(A, 0, 0);
+    vec2 B11 = subMatrix(B, 0, 0);
+
+    vec2 kron = kroneckerMul(A11, B11);
+    printMat(A11, "A11");
+    printMat(B11, "B11");
+    printMat(kron, "kronecker(A11,B11)");
+
+    vec2 kh = khatriRaoMul(A, B);
+    printMat(kh, "khatriRaoMul(A,B)");
+
+    return 0;
 }
