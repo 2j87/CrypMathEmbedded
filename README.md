@@ -11,4 +11,5 @@ for decrypt:
 > [!Warning]
 > decrypt is not avaible now!
 
-but encrypt is full fonctional!
+> [Note]
+> but encrypt is full fonctional!
