@@ -1,6 +1,6 @@
 # CrypMath
 Tubitak Project about cryptology 
-# How to Run
+## How to Run
 `/build/crypmath` is builted file
 for encrypt:
 `./build/crypmath --encrypt`
