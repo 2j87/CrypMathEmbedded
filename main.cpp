@@ -169,7 +169,7 @@ vec2 magicMatris(size_t i)
 {
     vec2 matris;
     matris.resize(4);
-    for(size_t i = 0; i < matris.size() ; ++i) matris[i].resize(4);
+    for(size_t j = 0; j < matris.size() ; ++j) matris[j].resize(4);
 
     switch(i)
     {
@@ -506,15 +506,19 @@ signed main(int argc, char* argv[])
     else if(timeInt < 18) timeZone = "third";
     else if(timeInt < 24) timeZone = "fourth";
 
+    //şifreleme:
     if(operation == "encrypt")
     {
+        std::vector<int> oneDigitFinalVec;
+        std::vector<int> oneDimensionMultipled;
         std::vector<int> intPlaintext;
-        std::vector<vec2> plainMatris;
         std::vector<int> digits;
-        std::vector<vec2> digitsMatris;
-        int64_t distance;
+        std::vector<vec2> plainMatrisVec;
+        std::vector<vec2> magicMatrisVec;
+        std::vector<vec2> multipledMatrisVec;
+        int64_t distance = 0;
 
-        for(int i = 0; i < plaintext.size(); ++i)
+        for(size_t i = 0; i < plaintext.size(); ++i)
             intPlaintext.push_back(charToInt(plaintext[i]));
         
             //kalan yerleri 0 ile doldurma
@@ -532,15 +536,15 @@ signed main(int argc, char* argv[])
                 for (int col = 0; col < 4; ++col)
                     block[row][col] = intPlaintext[i + (row * 4 + col)];
                     
-            plainMatris.push_back(block);
+            plainMatrisVec.push_back(block);
         }
 
         //control yazdırımı:
-        for(auto& row : plainMatris[0])
-        {
-            for(int val : row) std::cout << val << "\t";
-            std::cout << std::endl;
-        }
+        //for(auto& row : plainMatrisVec[0])
+        //{
+        //    for(int val : row) std::cout << val << "\t";
+        //    std::cout << std::endl;
+        //}
 
         if(timeZone == "first") distance = DisDD(SenderCord, ReceiverCord);
         else if(timeZone == "second") distance = TetHD(SenderCord, ReceiverCord);
@@ -554,6 +558,95 @@ signed main(int argc, char* argv[])
             digits.push_back(currentDigit);
             temp /= 10;
         }
+        std::reverse(digits.begin(), digits.end());
+
+        magicMatrisVec.resize(digits.size()); // Boyutu ayarla
+        for(size_t i = 0 ; i < digits.size(); ++i)
+            magicMatrisVec[i] = magicMatris(digits[i]);
+
+        
+        //magicMatris works true!
+
+        //for(auto i : magicMatrisVec)
+        //{
+        //    for(size_t j = 0; j < i.size(); ++j)
+        //    {
+        //        for(size_t k = 0; k < i.size(); ++k)
+        //        {
+        //            std::cout << i[j][k] << " ";
+        //        }
+        //        std::cout << "\n";
+        //    }
+        //    std::cout << "\n";
+        //}
+
+        //Well
+        //magicMatrisVel and 
+        //plainMatrisVec
+        //Will multiple here : 
+
+        vec2 matrisPlane(4, std::vector<int>(4, 0));
+
+        while(magicMatrisVec.size() > plainMatrisVec.size())
+            plainMatrisVec.push_back(matrisPlane);
+
+        while(magicMatrisVec.size() < plainMatrisVec.size())
+            magicMatrisVec.push_back(matrisPlane);
+    
+        if(timeZone == "first")
+        {
+            for(size_t i = 0; i < magicMatrisVec.size() && i < plainMatrisVec.size(); ++i)
+                multipledMatrisVec.push_back(hadamardMul(magicMatrisVec[i], plainMatrisVec[i]));
+        }
+        else if(timeZone == "second")
+        {
+            for(size_t i = 0; i < magicMatrisVec.size() && i < plainMatrisVec.size(); ++i)
+                multipledMatrisVec.push_back(khatriRaoMul(magicMatrisVec[i], plainMatrisVec[i]));
+        }
+        else if(timeZone == "third")
+        {
+            for(size_t i = 0; i < magicMatrisVec.size() && i < plainMatrisVec.size(); ++i)
+                multipledMatrisVec.push_back(kroneckerMul(magicMatrisVec[i], plainMatrisVec[i]));
+        }
+        else if(timeZone == "fourth")
+        {
+            for(size_t i = 0; i < magicMatrisVec.size() && i < plainMatrisVec.size(); ++i)
+                multipledMatrisVec.push_back(tracySinghMul(magicMatrisVec[i], plainMatrisVec[i]));
+        }
+        
+        for (const auto& matris : multipledMatrisVec)
+            for (const auto& row : matris)
+                for (int val : row)
+                    oneDimensionMultipled.push_back(val);
+
+        
+        for (int val : oneDimensionMultipled) 
+        {
+            std::vector<int> tempDigits(5, 0);
+            int tempVal = std::abs(val);
+            
+            //basamakları yerleştir:
+            for (int i = 4; i >= 0 && tempVal > 0; --i)
+            {
+                tempDigits[i] = tempVal % 10;
+                tempVal /= 10;
+            }
+
+            // add temp to vector
+            for (int digit : tempDigits)
+                oneDigitFinalVec.push_back(digit);
+        }
+
+        // Control:
+        std::cout << "[Output]: 5-Digit Formatted Vector:\n";
+        for (size_t i = 0; i < oneDigitFinalVec.size(); ++i)
+        {
+            std::cout << oneDigitFinalVec[i] << ( (i + 1) % 5 == 0 ? " | " : " " );
+            if ((i + 1) % 25 == 0) std::cout << "\n";
+        }
+
+        ciphertext = oneDigitFinalVec;
+        //result
         
     }
     else if(operation == "decrypt")
