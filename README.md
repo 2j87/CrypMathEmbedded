@@ -4,7 +4,9 @@ Tubitak Project about cryptology
 `/build/crypmath` is builted file
 for encrypt:
 `./build/crypmath --encrypt`
+
 for decrypt:
 `./build/crypmath --decrypt`
+
 warning : decrypt is not avaible now!
 but encrypt is full fonctional!
