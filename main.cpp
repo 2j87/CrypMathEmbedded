@@ -116,7 +116,7 @@ struct CordinateGps
 };
 
 //Disdyakis Dodecahedron distance
-int DisDU(CordinateEcef s, CordinateEcef r)
+int64_t DisDD(CordinateEcef s, CordinateEcef r)
 {
     double absX = std::abs(s.x - r.x);
     double absY = std::abs(s.y - r.y);
@@ -126,11 +126,11 @@ int DisDU(CordinateEcef s, CordinateEcef r)
     double el2 = (std::sqrt(2.0) - 1.0) * std::min({absX + absY , absY + absZ, absZ + absX});
     double el3 = (std::sqrt(2.0) - 2.0 * std::sqrt(2.0) + 1.0 ) * std::min({absX, absY, absZ});
 
-    return std::lround(el1 + el2 + el3);
+    return std::abs(std::lround(el1 + el2 + el3));
 }
 
 //Tetrakis Hexahedron Uzaklık
-int TetHU(CordinateEcef s, CordinateEcef r)
+int64_t TetHD(CordinateEcef s, CordinateEcef r)
 {
     double absX = std::abs(s.x - r.x);
     double absY = std::abs(s.y - r.y);
@@ -139,21 +139,21 @@ int TetHU(CordinateEcef s, CordinateEcef r)
     double el1 = (std::sqrt(3.0) - 1.0) * std::max({absX + absY, absX + absZ, absY + absZ});
     double el2 = (std::sqrt(3.0) - 1.0) * std::max({absX, absY, absZ});
 
-    return std::lround(el1 + el2);
+    return std::abs(std::lround(el1 + el2));
 }
 
 //Truncated Octahedron Uzaklık
-int TruOU(CordinateEcef s, CordinateEcef r)
+int64_t TruOD(CordinateEcef s, CordinateEcef r)
 {
     double absX = std::abs(s.x - r.x);
     double absY = std::abs(s.y - r.y);
     double absZ = std::abs(s.z - r.z);
 
-    return std::lround(std::max((2.0/3.0*(absX + absY + absZ)), std::max({absX, absY, absZ})));
+    return std::abs(std::lround(std::max((2.0/3.0*(absX + absY + absZ)), std::max({absX, absY, absZ}))));
 }
 
 //Triakis Octahedron Uzaklık
-int TriOU(CordinateEcef s, CordinateEcef r)
+int64_t TriOD(CordinateEcef s, CordinateEcef r)
 {
     double absX = std::abs(s.x - r.x);
     double absY = std::abs(s.y - r.y);
@@ -161,7 +161,7 @@ int TriOU(CordinateEcef s, CordinateEcef r)
 
     double el1 = (std::sqrt(2.0) - 2.0) * std::min({absX, absY, absZ});
 
-    return std::lround(absX + absY + absZ + el1);
+    return std::abs(std::lround(absX + absY + absZ + el1));
 }
 
 //magix Matrises
@@ -427,66 +427,139 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
     return returnMatris;
 }
 
-signed main()
+signed main(int argc, char* argv[])
 {
-    /*
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     std::tm* time = std::localtime(&t);
     //time->tm_hour // saat
     //time->tm_min // dakika
     //std::cout << time->tm_hour << "\n";
-
-    std::string input;
-    std::cin >> input;
-
-    std::vector<int> vecint(input.size());
-    for(int i = 0 ; i < vecint.size() ; ++i) vecint[i] = charToInt(input[i]);
     
     //GPS to ECEF
     //örnek koordinatlar
     CordinateEcef SenderCord = {4113913, 3440529, 3440829};
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
+    
+    /*
+        plaintext: şifrelenecek metin
+        ciphertext: şifrelenmiş, deşifrelenecek metin
+        operation: yapılacak işlem, şifreleme/deşifreleme
     */
+    std::string plaintext = "";
+    std::vector<int> ciphertext;
+    std::string operation;// ecrypt/decrypt/empty
 
-    //Matris multiples test example:
-    auto now = std::chrono::system_clock::now(); (void)now;
+    for(int i = 1; i < argc; ++i)
+    {
+        std::string arg = argv[i];
 
-    auto printMat = [](const vec2& M, const std::string& name){
-        std::cout << name << " (" << M.size() << " x " << (M.empty()?0:M[0].size()) << "):\n";
-        for (size_t i = 0; i < M.size(); ++i) {
-            for (size_t j = 0; j < M[i].size(); ++j) std::cout << M[i][j] << ' ';
-            std::cout << '\n';
+        if(arg == "--encrypt")
+        {
+            if(!operation.empty()) std::cerr << "[Error]: There's decript and encrypt!" << "\n";
+            operation = "encrypt";
         }
-        std::cout << "---\n";
-    };
+        else if(arg == "--decrypt")
+        {
+            if(!operation.empty()) std::cerr << "[Error]: There's decript and encrypt!" << "\n";
+            operation = "decrypt";
+        }
+    }
 
-    // create A and B 4x4
-    vec2 A(4, std::vector<int>(4));
-    vec2 B(4, std::vector<int>(4));
-    int v = 1;
-    for (int i = 0; i < 4; ++i)
-        for (int j = 0; j < 4; ++j)
-            A[i][j] = v++;
-    v = 101;
-    for (int i = 0; i < 4; ++i)
-        for (int j = 0; j < 4; ++j)
-            B[i][j] = v++;
+    if(operation == "encrypt")
+    {
+        std::cout << "[Input]: Enter input: ";
+        std::cin >> plaintext;
+    }
+    else if(operation == "decrypt")
+    {
+        std::cout << "[Input]: Enter input size: ";
+        int n;
+        std::cin >> n; 
+        std::cout << "[Input]: Enter input: ";
+        for(int i = 0; i < n; ++i)
+        {
+            int j;
+            std::cin >> j;
+            ciphertext.push_back(j);
+        }
+    }
 
-    // subblocks
-    vec2 A11 = subMatrix(A, 0, 0);
-    vec2 B11 = subMatrix(B, 0, 0);
+    std::cout << "[Operation]: ";
+    if(operation == "encrypt")
+    {
+        std::cout << "Encryption\n";
+        if(!plaintext.empty()) std::cout << "[Input]: Succesful\n";
+        std::cout << "[Input]: Input size: " << plaintext.size() << "\n";
+    }
+    else if(operation == "decrypt")
+    {
+        std::cout << "Decryption\n";
+        if(!ciphertext.empty()) std::cout << "[Input]: Succesful\n";
+        std::cout << "[Input]: Input size: " << ciphertext.size() << "\n";
+    }
 
-    vec2 kron = kroneckerMul(A11, B11);
-    printMat(A11, "A11");
-    printMat(B11, "B11");
-    printMat(kron, "kronecker(A11,B11)");
+    std::string timeZone;
+    int timeInt = time->tm_hour;
+    if(timeInt < 6) timeZone = "first";
+    else if(timeInt < 12) timeZone = "second";
+    else if(timeInt < 18) timeZone = "third";
+    else if(timeInt < 24) timeZone = "fourth";
 
-    vec2 kh = khatriRaoMul(A, B);
-    printMat(kh, "khatriRaoMul(A,B)");
+    if(operation == "encrypt")
+    {
+        std::vector<int> intPlaintext;
+        std::vector<vec2> plainMatris;
+        std::vector<int> digits;
+        std::vector<vec2> digitsMatris;
+        int64_t distance;
 
-    vec2 tracy = tracySinghMul(A, B);
-    printMat(tracy, "tracySingh(A,B)");
+        for(int i = 0; i < plaintext.size(); ++i)
+            intPlaintext.push_back(charToInt(plaintext[i]));
+        
+            //kalan yerleri 0 ile doldurma
+        while (intPlaintext.size() % 16 != 0)
+            intPlaintext.push_back(0);
+
+        for (size_t i = 0; i < intPlaintext.size(); i += 16)
+        {
+            if(intPlaintext[i] == -1) throw std::invalid_argument("Input have non-english character\n");
+
+            //ile önce block'a yazıp sonra bloks a eklio 
+            vec2 block(4, std::vector<int>(4));
+
+            for (int row = 0; row < 4; ++row)
+                for (int col = 0; col < 4; ++col)
+                    block[row][col] = intPlaintext[i + (row * 4 + col)];
+                    
+            plainMatris.push_back(block);
+        }
+
+        //control yazdırımı:
+        for(auto& row : plainMatris[0])
+        {
+            for(int val : row) std::cout << val << "\t";
+            std::cout << std::endl;
+        }
+
+        if(timeZone == "first") distance = DisDD(SenderCord, ReceiverCord);
+        else if(timeZone == "second") distance = TetHD(SenderCord, ReceiverCord);
+        else if(timeZone == "third") distance = TruOD(SenderCord, ReceiverCord);
+        else if(timeZone == "fourth") distance = TriOD(SenderCord, ReceiverCord);
+
+        int64_t temp = std::abs(distance);
+        while (temp > 0)
+        {
+            int currentDigit = temp % 10;
+            digits.push_back(currentDigit);
+            temp /= 10;
+        }
+        
+    }
+    else if(operation == "decrypt")
+    {
+
+    }
 
     return 0;
 }
