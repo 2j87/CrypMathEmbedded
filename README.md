@@ -8,5 +8,7 @@ for encrypt:
 for decrypt:
 `./build/crypmath --decrypt`
 
-warning : decrypt is not avaible now!
+> [!Warning]
+> decrypt is not avaible now!
+
 but encrypt is full fonctional!
