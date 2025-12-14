@@ -165,11 +165,11 @@ int TriOU(CordinateEcef s, CordinateEcef r)
 }
 
 //magix Matrises
-vec2 magicMatris(int i)
+vec2 magicMatris(size_t i)
 {
     vec2 matris;
     matris.resize(4);
-    for(int i = 0; i < matris.size() ; ++i) matris[i].resize(4);
+    for(size_t i = 0; i < matris.size() ; ++i) matris[i].resize(4);
 
     switch(i)
     {
@@ -242,10 +242,10 @@ vec2 magicMatris(int i)
 vec2 hadamardMul(vec2 A, vec2 B)
 {
     vec2 matris;
-    matris.resize(4); for(int i = 0 ; i < matris.size(); ++i) matris[i].resize(4);
+    matris.resize(4); for(size_t i = 0 ; i < matris.size(); ++i) matris[i].resize(4);
 
-    for(int i = 0 ; i < matris.size(); ++i)
-        for(int j = 0 ; j < matris.size(); ++j)
+    for(size_t i = 0 ; i < matris.size(); ++i)
+        for(size_t j = 0 ; j < matris.size(); ++j)
             matris[i][j] = A[i][j] * B[i][j];
 
     return matris;
@@ -280,6 +280,7 @@ vec2 kroneckerMul(const vec2& A, const vec2& B)
 //alt matrisin (2*2) sol üst köşesini alıp alt matrisi döndürür
 vec2 subMatrix(const vec2& M, int r, int c)
 {
+    //bir tık güvenilirlik
     if (r + 1 >= static_cast<int>(M.size()) || c + 1 >= static_cast<int>(M[0].size()))
         throw std::out_of_range("subMatrix: indices out of range");
 
@@ -297,20 +298,20 @@ vec2 subMatrix(const vec2& M, int r, int c)
 vec2 tracySinghMul(vec2 A, vec2 B)
 {
     vec2 returnMatris; returnMatris.resize(16);
-    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(16);
+    for(size_t i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(16);
     //final matris size is 16*16
 
     std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
     matrisPairs.resize(4);
-    for (int i = 0; i < 4; ++i)
+    for (size_t i = 0; i < 4; ++i)
     {
         matrisPairs[i].resize(4);
-        for (int j = 0; j < 4; ++j)
+        for (size_t j = 0; j < 4; ++j)
         {
             matrisPairs[i][j].first.resize(2);
             matrisPairs[i][j].second.resize(2);
 
-            for (int r = 0; r < 2; ++r)
+            for (size_t r = 0; r < 2; ++r)
             {
                 matrisPairs[i][j].first[r].resize(2);
                 matrisPairs[i][j].second[r].resize(2);
@@ -349,16 +350,16 @@ vec2 tracySinghMul(vec2 A, vec2 B)
     matrisPairs[3][3] = {A22, B22};
 
 
-    for (int i = 0; i < 4; ++i)
+    for (size_t i = 0; i < 4; ++i)
     {
-        for (int j = 0; j < 4; ++j)
+        for (size_t j = 0; j < 4; ++j)
         {
             // (i,j) -> kronecker çarpımı
             vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
-            int blockSize = static_cast<int>(tmp.size());// save type translation
+            size_t blockSize = static_cast<size_t>(tmp.size());// save type translation
 
-            for (int k = 0; k < blockSize; ++k)
-                for (int l = 0; l < blockSize; ++l)
+            for (size_t k = 0; k < blockSize; ++k)
+                for (size_t l = 0; l < blockSize; ++l)
                     returnMatris[i * blockSize + k][j * blockSize + l] = tmp[k][l];
         }
     }
@@ -372,20 +373,20 @@ vec2 tracySinghMul(vec2 A, vec2 B)
 vec2 khatriRaoMul(vec2 A, vec2 B)
 {
     vec2 returnMatris; returnMatris.resize(8);
-    for(int i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(8);
+    for(size_t i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(8);
     //son matris 4*4
 
     std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
     matrisPairs.resize(2);
-    for (int i = 0; i < 2; ++i)
+    for (size_t i = 0; i < 2; ++i)
     {
         matrisPairs[i].resize(2);
-        for (int j = 0; j < 2; ++j)
+        for (size_t j = 0; j < 2; ++j)
         {
             matrisPairs[i][j].first.resize(2);
             matrisPairs[i][j].second.resize(2);
 
-            for (int r = 0; r < 2; ++r)
+            for (size_t r = 0; r < 2; ++r)
             {
                 matrisPairs[i][j].first[r].resize(2);
                 matrisPairs[i][j].second[r].resize(2);
@@ -408,16 +409,16 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
     matrisPairs[1][0] = {A12, B11};
     matrisPairs[1][1] = {A12, B12};
 
-    for (int i = 0; i < 2; ++i)
+    for (size_t i = 0; i < 2; ++i)
     {
-        for (int j = 0; j < 2; ++j)
+        for (size_t j = 0; j < 2; ++j)
         {
             // (i,j) -> kronecker çarpımı
             vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
-            int blockSize = static_cast<int>(tmp.size());// save type translation
+            size_t blockSize = tmp.size();// save type translation
 
-            for (int k = 0; k < blockSize; ++k)
-                for (int l = 0; l < blockSize; ++l)
+            for (size_t k = 0; k < blockSize; ++k)
+                for (size_t l = 0; l < blockSize; ++l)
                     returnMatris[i * blockSize + k][j * blockSize + l] = tmp[k][l];
         }
     }
