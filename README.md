@@ -1,7 +1,7 @@
-# CrypMath
-Tubitak Project about cryptology 
+### Tubitak Project about cryptology 
 
-## How to Run
+# Documents
+
 `/build/crypmath` is builted file
 
 > [!Warning]
@@ -9,7 +9,7 @@ Tubitak Project about cryptology
 
 > but encrypt is full fonctional!
 
-### Flags
+# Usage
 
 > [!Warning]
 > You must encrypt or decrypt
