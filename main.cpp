@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <fstream>
 
 using vec2 = std::vector<std::vector<int>>;
 
@@ -429,12 +430,12 @@ vec2 khatriRaoMul(vec2 A, vec2 B)
 
 signed main(int argc, char* argv[])
 {
-    auto now = std::chrono::system_clock::now();
-    std::time_t t = std::chrono::system_clock::to_time_t(now);
-    std::tm* time = std::localtime(&t);
     //time->tm_hour // saat
     //time->tm_min // dakika
     //std::cout << time->tm_hour << "\n";
+    auto now = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+    std::tm* time = std::localtime(&t);
     
     //GPS to ECEF
     //örnek koordinatlar
@@ -450,6 +451,10 @@ signed main(int argc, char* argv[])
     std::vector<int> ciphertext;
     std::string operation;// ecrypt/decrypt/empty
 
+    std::string outputFilePath;
+    std::string inputFilePath;
+    bool isInputFile = false;
+
     for(int i = 1; i < argc; ++i)
     {
         std::string arg = argv[i];
@@ -464,24 +469,16 @@ signed main(int argc, char* argv[])
             if(!operation.empty()) std::cerr << "[Error]: There's decript and encrypt!" << "\n";
             operation = "decrypt";
         }
-    }
-
-    if(operation == "encrypt")
-    {
-        std::cout << "[Input]: Enter input: ";
-        std::cin >> plaintext;
-    }
-    else if(operation == "decrypt")
-    {
-        std::cout << "[Input]: Enter input size: ";
-        int n;
-        std::cin >> n; 
-        std::cout << "[Input]: Enter input: ";
-        for(int i = 0; i < n; ++i)
+        else if(arg == "-o" && i+1 < argc)
         {
-            int j;
-            std::cin >> j;
-            ciphertext.push_back(j);
+            std::string tmp = argv[++i];
+            outputFilePath = tmp;
+        }
+        else if(arg == "-r" && i+1 < argc)
+        {
+            std::string tmp = argv[++i];
+            inputFilePath = tmp;
+            isInputFile = true;
         }
     }
 
@@ -489,12 +486,45 @@ signed main(int argc, char* argv[])
     if(operation == "encrypt")
     {
         std::cout << "Encryption\n";
+        if(isInputFile)
+        {
+            std::ifstream inputFile(inputFilePath);
+            char c;
+
+            try
+            {
+                if(inputFile.is_open())
+                {
+                    while (inputFile >> c)
+                        plaintext.push_back(c);
+                        
+                    inputFile.close();
+                }
+                else throw std::string("fileCantOpen");
+            }
+            catch(std::string e)
+            {
+                if(e == "fileCantOpen") std::cerr << "[Error]: Input file cant opened: " << inputFilePath << "\n";
+            }
+        }
+        else
+        {
+            std::cout << "[Input]: Enter input: ";
+            std::cin >> plaintext;
+        }
+
+        
         if(!plaintext.empty()) std::cout << "[Input]: Succesful\n";
         std::cout << "[Input]: Input size: " << plaintext.size() << "\n";
+
+        //input yoksa işlem yok:
+        if(plaintext.empty()) throw;
+
     }
     else if(operation == "decrypt")
     {
         std::cout << "Decryption\n";
+
         if(!ciphertext.empty()) std::cout << "[Input]: Succesful\n";
         std::cout << "[Input]: Input size: " << ciphertext.size() << "\n";
     }
@@ -506,7 +536,7 @@ signed main(int argc, char* argv[])
     else if(timeInt < 18) timeZone = "third";
     else if(timeInt < 24) timeZone = "fourth";
 
-    //şifreleme:
+    // şifreleme:
     if(operation == "encrypt")
     {
         std::vector<int> oneDigitFinalVec;
@@ -565,20 +595,7 @@ signed main(int argc, char* argv[])
             magicMatrisVec[i] = magicMatris(digits[i]);
 
         
-        //magicMatris works true!
-
-        //for(auto i : magicMatrisVec)
-        //{
-        //    for(size_t j = 0; j < i.size(); ++j)
-        //    {
-        //        for(size_t k = 0; k < i.size(); ++k)
-        //        {
-        //            std::cout << i[j][k] << " ";
-        //        }
-        //        std::cout << "\n";
-        //    }
-        //    std::cout << "\n";
-        //}
+        //magicMatris works well!
 
         //Well
         //magicMatrisVel and 
@@ -625,7 +642,7 @@ signed main(int argc, char* argv[])
             std::vector<int> tempDigits(5, 0);
             int tempVal = std::abs(val);
             
-            //basamakları yerleştir:
+            // basamakları yerleştir:
             for (int i = 4; i >= 0 && tempVal > 0; --i)
             {
                 tempDigits[i] = tempVal % 10;
@@ -637,18 +654,51 @@ signed main(int argc, char* argv[])
                 oneDigitFinalVec.push_back(digit);
         }
 
-        // Control:
-        std::cout << "[Output]: 5-Digit Formatted Vector:\n";
-        for (size_t i = 0; i < oneDigitFinalVec.size(); ++i)
-        {
-            std::cout << oneDigitFinalVec[i] << ( (i + 1) % 5 == 0 ? " | " : " " );
-            if ((i + 1) % 25 == 0) std::cout << "\n";
-        }
-
+        // Result:
         ciphertext = oneDigitFinalVec;
-        //result
+        // Output:
+        try
+        {
+            if(outputFilePath.empty()) throw std::string("NofilePath");
         
+            std::ofstream outputFile(outputFilePath);
+
+            if(!outputFile.is_open()) throw "fileCantOpen";
+            while(outputFile.is_open())
+            {
+                for (size_t i = 0; i < ciphertext.size(); ++i)
+                    outputFile << ciphertext[i];
+                
+                outputFile.close();
+                std::cout << "[Output]: Output size: " << ciphertext.size() << "\n";
+                std::cout << "[Output]: Output file: " << outputFilePath << "\n";
+                std::cout << "[Output]: Succesful\n";
+            }
+        }
+        catch(const std::string e)
+        {
+            if(e == "NofilePath")
+            {
+                outputFilePath = "output.txt";
+                std::ofstream outputFile(outputFilePath);
+                ciphertext = oneDigitFinalVec;
+
+                if(!outputFile.is_open()) throw "fileCantOpen";
+                while(outputFile.is_open())
+                {
+                    for (size_t i = 0; i < ciphertext.size(); ++i)
+                        outputFile << ciphertext[i];
+                    
+                    outputFile.close();
+                    std::cout << "[Output]: Output size: " << ciphertext.size() << "\n";
+                    std::cout << "[Output]: Output file: " << outputFilePath << "\n";
+                    std::cout << "[Output]: Succesful\n";
+                }
+            }
+            if(e == "fileCantOpen") std::cerr << "[Error]: Output file cant opened\n";
+        }        
     }
+    // deşifreleme:
     else if(operation == "decrypt")
     {
 
