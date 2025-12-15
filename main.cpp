@@ -6,6 +6,8 @@
 #include <cmath>
 #include <stdexcept>
 #include <fstream>
+#include <string>
+#include <sstream>
 
 using vec2 = std::vector<std::vector<int>>;
 
@@ -100,6 +102,29 @@ int charToInt(char ch)
     }
 
     return retrn;
+}
+
+// Helper function to reverse charToInt
+char intToChar(int val)
+{
+    int arr[] = {1, 2, 3, 4, 5, 6, 7,8, 9,10,11, 20, 22, 24, 26, 28, 30, 32, 34, 35, 59, 62, 65, 68, 71, 74, 77,80,81,127,131,
+    135,139,143,147,151,155,156, 231, 236, 241, 246, 251, 256, 261, 266, 267, 378, 384, 390, 396, 402,
+    408, 414, 420, 421, 575, 582, 589, 596, 603, 610, 617, 624, 625,829,837,845,853,861,869,877,885,
+    886,1165,1174,1183,1192,1201,1210,1211,1536,1546,1556,1566,1576,1586,1606,1607, 2014};
+
+    // Mapping indices to chars based on charToInt switch order
+    const char chars[] = {
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        '.', '(', ')', ',', ';', ':', '\'', '@', '"', '?', '!', '/', '-', '+', '=', ' ',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    };
+
+    int size = sizeof(arr)/sizeof(arr[0]);
+    for(int i = 0; i < size; ++i) {
+        if(arr[i] == val) return chars[i];
+    }
+    return 0; // Null char for padding/not found
 }
 
 struct CordinateEcef
@@ -252,8 +277,27 @@ vec2 hadamardMul(vec2 A, vec2 B)
     return matris;
 }
 
-//Kronecker
-//added rectangle multiples
+// INVERSE Hadamard (Decrypt)
+// C = A * B => B = C / A
+vec2 inverseHadamardMul(vec2 A, vec2 C)
+{
+    vec2 matris;
+    matris.resize(4); for(size_t i = 0 ; i < matris.size(); ++i) matris[i].resize(4);
+
+    for(size_t i = 0 ; i < matris.size(); ++i)
+        for(size_t j = 0 ; j < matris.size(); ++j)
+        {
+            if(A[i][j] != 0)
+                matris[i][j] = C[i][j] / A[i][j];
+            else 
+                matris[i][j] = 0; // Should not happen with given magic matrices
+        }
+
+    return matris;
+}
+
+// Kronecker
+// added rectangle multiples
 vec2 kroneckerMul(const vec2& A, const vec2& B)
 {
     int rowsA = A.size();
@@ -277,8 +321,30 @@ vec2 kroneckerMul(const vec2& A, const vec2& B)
     return returnMatris;
 }
 
-//tracySinghMul için yardımcı fonksiyon
-//alt matrisin (2*2) sol üst köşesini alıp alt matrisi döndürür
+// inverse Kronecker (Decrypt)
+vec2 inverseKroneckerMul(const vec2& A, const vec2& C)
+{
+    vec2 returnMatris(4, std::vector<int>(4));
+    
+    // A[0][0] 0 değil sayıyoz (sihirli matrislerde 0 yok)
+    int scaler = A[0][0];
+    
+    // Block size of B is 4x4
+    for(int i = 0; i < 4; ++i)
+    {
+        for(int j = 0; j < 4; ++j) 
+        {
+            if(scaler != 0)
+                returnMatris[i][j] = C[i][j] / scaler;
+            else
+                returnMatris[i][j] = 0;
+        }
+    }
+    return returnMatris;
+}
+
+// tracySinghMul için yardımcı fonksiyon
+// alt matrisin (2*2) sol üst köşesini alıp alt matrisi döndürür
 vec2 subMatrix(const vec2& M, int r, int c)
 {
     //bir tık güvenilirlik
@@ -293,9 +359,8 @@ vec2 subMatrix(const vec2& M, int r, int c)
     return S;
 }
 
-//Tracy Singh matris çarpımı
-//matrislerin ikisi de 4*4 diye varsayılıyor
-
+// Tracy Singh matris çarpımı
+// matrislerin ikisi de 4*4 diye varsayılıyor
 vec2 tracySinghMul(vec2 A, vec2 B)
 {
     vec2 returnMatris; returnMatris.resize(16);
@@ -369,65 +434,115 @@ vec2 tracySinghMul(vec2 A, vec2 B)
 
 }
 
+// inverse Tracy-Singh
+vec2 inverseTracySinghMul(vec2 A, vec2 C)
+{
+    vec2 returnMatris(4, std::vector<int>(4));
+
+    vec2 A11 = subMatrix(A, 0, 0);
+
+    int scaler = A11[0][0];
+    if(scaler == 0) scaler = 1; // Safety!
+
+    // Recover B11
+    for(int r=0; r<2; ++r) for(int c=0; c<2; ++c)
+        returnMatris[r][c] = C[r][c] / scaler;
+
+    // Recover B12
+    for(int r=0; r<2; ++r) for(int c=0; c<2; ++c)
+        returnMatris[r][c+2] = C[r][c+4] / scaler;
+
+    // Recover B21
+    for(int r=0; r<2; ++r) for(int c=0; c<2; ++c)
+        returnMatris[r+2][c] = C[r+4][c] / scaler;
+
+    // Recover B22
+    for(int r=0; r<2; ++r) for(int c=0; c<2; ++c)
+        returnMatris[r+2][c+2] = C[r+4][c+4] / scaler;
+
+    return returnMatris;
+}
+
 //Khatri-Rao matris çarpımı (kroneckerMul kullanılarak)
 //A ve B 4*4 varsayıldı
 vec2 khatriRaoMul(vec2 A, vec2 B)
 {
-    vec2 returnMatris; returnMatris.resize(8);
-    for(size_t i = 0; i < returnMatris.size(); ++i) returnMatris[i].resize(8);
-    //son matris 4*4
+    // Sonuç matrisi 8x8 olacak (4 tane 4x4'lük bloktan oluşacak)
+    vec2 returnMatris(8, std::vector<int>(8));
 
-    std::vector<std::vector<std::pair<vec2, vec2>>> matrisPairs;
-    matrisPairs.resize(2);
-    for (size_t i = 0; i < 2; ++i)
-    {
-        matrisPairs[i].resize(2);
-        for (size_t j = 0; j < 2; ++j)
-        {
-            matrisPairs[i][j].first.resize(2);
-            matrisPairs[i][j].second.resize(2);
+    // A ve B'yi 2x2'lik alt bloklara ayır
+    vec2 A11 = subMatrix(A, 0, 0); vec2 A12 = subMatrix(A, 0, 2);
+    vec2 A21 = subMatrix(A, 2, 0); vec2 A22 = subMatrix(A, 2, 2);
 
-            for (size_t r = 0; r < 2; ++r)
-            {
-                matrisPairs[i][j].first[r].resize(2);
-                matrisPairs[i][j].second[r].resize(2);
-            }
-        }
-    }
+    vec2 B11 = subMatrix(B, 0, 0); vec2 B12 = subMatrix(B, 0, 2);
+    vec2 B21 = subMatrix(B, 2, 0); vec2 B22 = subMatrix(B, 2, 2);
 
-    vec2 A11 = subMatrix(A, 0, 0);
-    vec2 A12 = subMatrix(A, 0, 2);
-    vec2 A21 = subMatrix(A, 2, 0);
-    vec2 A22 = subMatrix(A, 2, 2);
-
-    vec2 B11 = subMatrix(B, 0, 0);
-    vec2 B12 = subMatrix(B, 0, 2);
-    vec2 B21 = subMatrix(B, 2, 0);
-    vec2 B22 = subMatrix(B, 2, 2);
-
-    matrisPairs[0][0] = {A11, B11};
-    matrisPairs[0][1] = {A11, B12};
-    matrisPairs[1][0] = {A12, B11};
-    matrisPairs[1][1] = {A12, B12};
-
-    for (size_t i = 0; i < 2; ++i)
-    {
-        for (size_t j = 0; j < 2; ++j)
-        {
-            // (i,j) -> kronecker çarpımı
-            vec2 tmp = kroneckerMul(matrisPairs[i][j].first, matrisPairs[i][j].second);
-            size_t blockSize = tmp.size();// save type translation
-
-            for (size_t k = 0; k < blockSize; ++k)
-                for (size_t l = 0; l < blockSize; ++l)
-                    returnMatris[i * blockSize + k][j * blockSize + l] = tmp[k][l];
-        }
-    }
+    // C_ij = A_ij x B_ij
+    vec2 C11 = kroneckerMul(A11, B11); // Sol-Üst Blok İçin
+    vec2 C12 = kroneckerMul(A12, B12); // Sağ-Üst Blok İçin
+    vec2 C21 = kroneckerMul(A21, B21); // Sol-Alt Blok İçin
+    vec2 C22 = kroneckerMul(A22, B22); // Sağ-Alt Blok İçin
 
     
+    // Sol Üst C11
+    for(int i = 0; i < 4; ++i)
+        for(int j = 0; j < 4; ++j)
+            returnMatris[i][j] = C11[i][j];
+
+    // Sağ Üst C12
+    for(int i = 0; i < 4; ++i)
+        for(int j = 0; j < 4; ++j)
+            returnMatris[i][j + 4] = C12[i][j];
+
+    // Sol Alt C21
+    for(int i = 0; i < 4; ++i)
+        for(int j = 0; j < 4; ++j)
+            returnMatris[i + 4][j] = C21[i][j];
+
+    // Sağ Alt C22
+    for(int i = 0; i < 4; ++i)
+        for(int j = 0; j < 4; ++j)
+            returnMatris[i + 4][j + 4] = C22[i][j];
+
     return returnMatris;
 }
 
+// Inverse Khatri-Rao
+// (8x8 : C) & (4x4 : A) = (4x4 : B)
+vec2 inverseKhatriRaoMul(vec2 A, vec2 C)
+{
+    vec2 B(4, std::vector<int>(4));
+
+    // 0'a bölme hatası önlemi
+    int s11 = A[0][0]; if(s11 == 0) s11 = 1;
+    int s12 = A[0][2]; if(s12 == 0) s12 = 1;
+    int s21 = A[2][0]; if(s21 == 0) s21 = 1;
+    int s22 = A[2][2]; if(s22 == 0) s22 = 1;
+
+    // B11: C sol üst
+    for(int i = 0; i < 2; ++i)
+        for(int j = 0; j < 2; ++j)
+            B[i][j] = C[i][j] / s11;
+
+    // B12: C sağ üst
+    for(int i = 0; i < 2; ++i)
+        for(int j = 0; j < 2; ++j)
+            B[i][j + 2] = C[i][j + 4] / s12;
+
+    // B21: C sol alt
+    for(int i = 0; i < 2; ++i)
+        for(int j = 0; j < 2; ++j)
+            B[i + 2][j] = C[i + 4][j] / s21;
+
+    // B22: C sağ alt
+    for(int i = 0; i < 2; ++i)
+        for(int j = 0; j < 2; ++j)
+            B[i + 2][j + 2] = C[i + 4][j + 4] / s22;
+
+    return B;
+}
+
+//main lo
 signed main(int argc, char* argv[])
 {
     //time->tm_hour // saat
@@ -482,6 +597,7 @@ signed main(int argc, char* argv[])
         }
     }
 
+    // Operasyon ayarları yapma:
     std::cout << "[Operation]: ";
     if(operation == "encrypt")
     {
@@ -525,6 +641,45 @@ signed main(int argc, char* argv[])
     {
         std::cout << "Decryption\n";
 
+        if(isInputFile)
+        {
+            std::ifstream inputFile(inputFilePath);
+            std::string content = "";
+            char c;
+
+            try
+            {
+                if(inputFile.is_open())
+                {
+                    while (inputFile >> c)
+                        content.push_back(c);
+                    
+                    inputFile.close();
+                    // content groups the 5 digit blocks
+                    if(content.size() % 5 != 0)
+                        std::cerr << "[Warning]: File content length not multiple of 5. Truncating.\n";
+
+                    for(size_t i = 0; i < content.size(); i += 5)
+                    {
+                        if(i + 5 <= content.size())
+                        {
+                            std::string sub = content.substr(i, 5);
+                            ciphertext.push_back(std::stoi(sub));
+                        }
+                    }
+                }
+                else throw std::string("fileCantOpen");
+            }
+            catch(std::string e)
+            {
+                if(e == "fileCantOpen") std::cerr << "[Error]: Input file cant opened: " << inputFilePath << "\n";
+            }
+        }
+        else
+        {
+            // Manual input not implemented
+        }
+
         if(!ciphertext.empty()) std::cout << "[Input]: Succesful\n";
         std::cout << "[Input]: Input size: " << ciphertext.size() << "\n";
     }
@@ -551,7 +706,7 @@ signed main(int argc, char* argv[])
         for(size_t i = 0; i < plaintext.size(); ++i)
             intPlaintext.push_back(charToInt(plaintext[i]));
         
-            //kalan yerleri 0 ile doldurma
+        //kalan yerleri 0 ile doldurma
         while (intPlaintext.size() % 16 != 0)
             intPlaintext.push_back(0);
 
@@ -568,13 +723,6 @@ signed main(int argc, char* argv[])
                     
             plainMatrisVec.push_back(block);
         }
-
-        //control yazdırımı:
-        //for(auto& row : plainMatrisVec[0])
-        //{
-        //    for(int val : row) std::cout << val << "\t";
-        //    std::cout << std::endl;
-        //}
 
         if(timeZone == "first") distance = DisDD(SenderCord, ReceiverCord);
         else if(timeZone == "second") distance = TetHD(SenderCord, ReceiverCord);
@@ -701,8 +849,99 @@ signed main(int argc, char* argv[])
     // deşifreleme:
     else if(operation == "decrypt")
     {
+        std::vector<int> digits;
+        std::vector<vec2> magicMatrisVec;
+        std::vector<vec2> cipherMatrisVec;
+        std::vector<vec2> decryptedMatrisVec;
+        int64_t distance = 0;
 
+        // Anahtar ı hesapla
+        if(timeZone == "first") distance = DisDD(SenderCord, ReceiverCord);
+        else if(timeZone == "second") distance = TetHD(SenderCord, ReceiverCord);
+        else if(timeZone == "third") distance = TruOD(SenderCord, ReceiverCord);
+        else if(timeZone == "fourth") distance = TriOD(SenderCord, ReceiverCord);
+
+        int64_t temp = std::abs(distance);
+        while (temp > 0)
+        {
+            int currentDigit = temp % 10;
+            digits.push_back(currentDigit);
+            temp /= 10;
+        }
+        std::reverse(digits.begin(), digits.end());
+
+        magicMatrisVec.resize(digits.size()); 
+        for(size_t i = 0 ; i < digits.size(); ++i)
+            magicMatrisVec[i] = magicMatris(digits[i]);
+
+        // saate göre matris boyutlarını ayarla:
+        int matRows = 0;
+        int matCols = 0;
+
+        if(timeZone == "first")         { matRows =  4; matCols =  4; }
+        else if(timeZone == "second")   { matRows =  8; matCols =  8; }
+        else if(timeZone == "third")    { matRows = 16; matCols = 16; }
+        else if(timeZone == "fourth")   { matRows = 16; matCols = 16; }
+
+        int elementsPerMatrix = matRows * matCols;
+        
+        // Reconstruct matrices
+        for(size_t i = 0; i < ciphertext.size(); i += elementsPerMatrix)
+        {
+            if (i + elementsPerMatrix > ciphertext.size()) break;
+
+            vec2 mat(matRows, std::vector<int>(matCols));
+            for(int r = 0; r < matRows; ++r)
+                for(int c = 0; c < matCols; ++c)
+                    mat[r][c] = ciphertext[i + (r * matCols + c)];
+            
+            cipherMatrisVec.push_back(mat);
+        }
+
+        vec2 matrisPlane(4, std::vector<int>(4, 0));
+        
+        while(magicMatrisVec.size() < cipherMatrisVec.size())
+            magicMatrisVec.push_back(matrisPlane);
+
+        // Decrypt Matrixes
+        if(timeZone == "first")
+            for(size_t i = 0; i < cipherMatrisVec.size(); ++i)
+                decryptedMatrisVec.push_back(inverseHadamardMul(magicMatrisVec[i], cipherMatrisVec[i]));
+        else if(timeZone == "second")
+            for(size_t i = 0; i < cipherMatrisVec.size(); ++i)
+                decryptedMatrisVec.push_back(inverseKhatriRaoMul(magicMatrisVec[i], cipherMatrisVec[i]));
+        else if(timeZone == "third")
+            for(size_t i = 0; i < cipherMatrisVec.size(); ++i)
+                decryptedMatrisVec.push_back(inverseKroneckerMul(magicMatrisVec[i], cipherMatrisVec[i]));
+        else if(timeZone == "fourth")
+            for(size_t i = 0; i < cipherMatrisVec.size(); ++i)
+                decryptedMatrisVec.push_back(inverseTracySinghMul(magicMatrisVec[i], cipherMatrisVec[i]));
+
+
+        // Translate to String
+        for(const auto& mat : decryptedMatrisVec)
+            for(const auto& row : mat)
+                for(int val : row)
+                {
+                    char ch = intToChar(val);
+                    if(ch != 0) plaintext.push_back(ch);
+                }
+
+        // Output
+        if(outputFilePath.empty()) outputFilePath = "output.txt";
+        std::ofstream outputFile(outputFilePath);
+        if(!outputFile.is_open()) 
+            std::cerr << "[Error]: Output file cant opened\n";
+        else
+        {
+            outputFile << plaintext;
+            outputFile.close();
+            std::cout << "[Output]: Decrypted text: " << plaintext << "\n";
+            std::cout << "[Output]: Output file: " << outputFilePath << "\n";
+            std::cout << "[Output]: Succesful\n";
+        }
     }
 
+    // wow
     return 0;
 }
