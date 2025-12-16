@@ -23,8 +23,9 @@ struct CordinateEcef
 
 struct CordinateGps
 {
-    int GpsLat;//Enlem x1 000 000 degree
-    int GpsLon;//Boylam x1 000 000 degree
+    int lat;//Enlem x1 000 000 degree
+    int lon;//Boylam x1 000 000 degree
+    int h;
 };
 
 
@@ -37,13 +38,13 @@ size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 
 // Get Location:
 // [Location]: 
-CordinateGps getIpLocation()
+void getIpLocation()
 {
-    CordinateGps returnCordinate;
+    //CordinateGps returnCordinate;
     CURL *curl;
     CURLcode res;
     std::string readBuffer;
-    std::string Latilute, Longitude;
+    std::string latilute, longitude, cityPosition;
 
     curl = curl_easy_init();
     if(curl)
@@ -75,10 +76,14 @@ CordinateGps getIpLocation()
             if (cityPos != std::string::npos)
             {
                 size_t end = readBuffer.find("\"", cityPos + 8);
+
+                cityPosition = readBuffer.substr(cityPos + 8, end - (cityPos + 8));
+
                 std::cout << "[Location]: City : "
-                        << readBuffer.substr(cityPos + 8, end - (cityPos + 8))
+                        << cityPosition
                         << "\n";
             }
+            else std::cerr << "[Location]: cityPosition is empty\n";
 
             // Enlem (Lat)
             size_t latPos = readBuffer.find("\"lat\":");
@@ -86,12 +91,14 @@ CordinateGps getIpLocation()
             {
                 size_t end = readBuffer.find(",", latPos);
 
-                Latilute = readBuffer.substr(latPos + 6, end - (latPos + 6));
+                latilute = readBuffer.substr(latPos + 6, end - (latPos + 6));
 
                 std::cout << "[Location]: Latitude: "
-                        << Latilute
+                        << latilute
                         << "\n";
             }
+            else std::cerr << "[Location]: lat is empty\n";
+
 
             // Boylam (Lon)
             size_t lonPos = readBuffer.find("\"lon\":");
@@ -99,12 +106,14 @@ CordinateGps getIpLocation()
             {
                 size_t end = readBuffer.find(",", lonPos);
 
-                Longitude = readBuffer.substr(latPos + 6, end - (latPos + 6));
+                longitude = readBuffer.substr(lonPos + 6, end - (lonPos + 6));
 
-                std::cout << "[Location]: Longitude: "
-                        << Longitude
+                std::cout << "[Location]: longitude: "
+                        << longitude
                         << "\n";
             }
+            else std::cerr << "[Location]: lon is empty\n";
+
 
             std::cout << "[Warning]: This location is your internet service provider's central office location.\n";
         }
@@ -112,7 +121,8 @@ CordinateGps getIpLocation()
         curl_easy_cleanup(curl);
     }
 
-    return returnCordinate;
+    //returnCordinate = {std::stoi(latilute), std::stoi(longitude), 5};
+    //return returnCordinate;
 }
 
 // hexArr türü:
@@ -590,7 +600,9 @@ signed main(int argc, char* argv[])
     //örnek koordinatlar
     CordinateEcef SenderCord = {4113913, 3440529, 3440829};
     
-    //CordinateEcef SenderCord = getIpLocation();
+    getIpLocation();
+    //CordinateGps tmpCord = getIpLocation();
+    //std::cout << tmpCord.lon << " " << tmpCord.lat << " " << tmpCord.h << "\n"; 
     
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
     
@@ -599,7 +611,7 @@ signed main(int argc, char* argv[])
         ciphertext: şifrelenmiş, deşifrelenecek metin
         operation: yapılacak işlem, şifreleme/deşifreleme
     */
-    std::wstring plaintext = L""; // DEĞİŞİKLİK: wstring kullanıldı
+    std::wstring plaintext = L""; // wstring kullanıldı
     std::vector<int> ciphertext;
     std::string operation;// ecrypt/decrypt/empty
 
