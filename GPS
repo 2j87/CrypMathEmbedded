@@ -1,0 +1,149 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <array>
+#include <memory>
+#include <sstream>
+#include <curl/curl.h>
+
+// NOT: Buraya Google Geolocation API anahtarınızı girmelisiniz.
+const std::string API_KEY = "BURAYA_GOOGLE_API_KEY_YAZIN";
+
+struct AccessPoint {
+    std::string mac;
+    int signal;
+};
+
+// YARDIMCI: Komut satırı çıktısını okumak için (Wi-Fi taraması)
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() başarısız oldu!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+// 1. ADIM: Wi-Fi Ağlarını Tara
+std::vector<AccessPoint> scanWifiNetworks() {
+    std::vector<AccessPoint> aps;
+    
+    // nmcli komutu ile tarama yapıyoruz (-t: terse mode/script dostu)
+    // Sadece BSSID (MAC) ve SIGNAL gücünü alıyoruz.
+    std::string output = exec("nmcli -t -f BSSID,SIGNAL dev wifi list");
+    
+    std::stringstream ss(output);
+    std::string line;
+
+    while (std::getline(ss, line)) {
+        // nmcli -t çıktısı şöyledir: AA:BB:CC:DD:EE:FF:80
+        // MAC ve Sinyal ':' ile ayrılmıştır, ancak MAC adresinin içinde de ':' vardır.
+        // Sondaki ':' işaretini bulup ayıracağız.
+        
+        size_t lastColon = line.find_last_of(':');
+        if (lastColon != std::string::npos) {
+            std::string mac = line.substr(0, lastColon);
+            // MAC adresindeki ters slashları temizle (nmcli bazen kaçış karakteri ekler)
+            std::string cleanMac;
+            for(char c : mac) {
+                if(c != '\\') cleanMac += c;
+            }
+
+            std::string signalStr = line.substr(lastColon + 1);
+            
+            try {
+                int signal = std::stoi(signalStr);
+                aps.push_back({cleanMac, signal});
+            } catch (...) {
+                continue;
+            }
+        }
+    }
+    return aps;
+}
+
+// YARDIMCI: cURL için yazma fonksiyonu
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+// 2. ADIM: API'ye İstek Gönder
+void getCoordinates(const std::vector<AccessPoint>& aps) {
+    CURL* curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    // JSON verisini manuel oluşturuyoruz (Harici JSON kütüphanesi kullanmamak için)
+    std::string jsonPayload = "{\"considerIp\": \"true\", \"wifiAccessPoints\": [";
+    
+    for (size_t i = 0; i < aps.size(); ++i) {
+        jsonPayload += "{\"macAddress\": \"" + aps[i].mac + "\",";
+        jsonPayload += "\"signalStrength\": " + std::to_string(aps[i].signal) + "}";
+        if (i < aps.size() - 1) jsonPayload += ",";
+    }
+    jsonPayload += "]}";
+
+    curl = curl_easy_init();
+    if(curl) {
+        std::string url = "https://www.googleapis.com/geolocation/v1/geolocate?key=" + API_KEY;
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonPayload.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        res = curl_easy_perform(curl);
+        
+        if(res != CURLE_OK) {
+            fprintf(stderr, "cURL Hatası: %s\n", curl_easy_strerror(res));
+        } else {
+            // Basit string parse işlemi (Gerçek projede nlohmann/json kullanın)
+            std::cout << "--- API YANITI ---\n" << readBuffer << std::endl;
+            
+            // Koordinatları basitçe bulalım
+            size_t latPos = readBuffer.find("\"lat\":");
+            size_t lngPos = readBuffer.find("\"lng\":");
+            
+            if (latPos != std::string::npos && lngPos != std::string::npos) {
+                std::cout << "\n[SONUÇ]" << std::endl;
+                // Parse işlemi burada basitleştirilmiştir
+                std::cout << "Ham Veri Alındı. JSON içinden 'lat' ve 'lng' değerlerini parse edebilirsiniz." << std::endl;
+            }
+        }
+
+        curl_easy_cleanup(curl);
+        curl_slist_free_all(headers);
+    }
+}
+
+int main() {
+    std::cout << "Wi-Fi Aglari taraniyor..." << std::endl;
+    std::vector<AccessPoint> aps = scanWifiNetworks();
+
+    if (aps.empty()) {
+        std::cout << "Hata: Hicbir Wi-Fi agi bulunamadi veya nmcli calismiyor." << std::endl;
+        return 1;
+    }
+
+    std::cout << aps.size() << " adet ag bulundu. Konum sorgulaniyor..." << std::endl;
+    
+    if (API_KEY == "BURAYA_GOOGLE_API_KEY_YAZIN") {
+        std::cout << "HATA: Lutfen kodun icindeki API_KEY alanini doldurun!" << std::endl;
+        std::cout << "Ornek veri paketi:\n";
+        // Test amaçlı ilk ağı yazdıralım
+        std::cout << "MAC: " << aps[0].mac << " Sinyal: " << aps[0].signal << std::endl;
+    } else {
+        getCoordinates(aps);
+    }
+
+    return 0;
+}
