@@ -11,6 +11,10 @@
 #include <locale>
 #include <curl/curl.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 using vec2 = std::vector<std::vector<int>>;
 
 struct CordinateEcef
@@ -27,6 +31,35 @@ struct CordinateGps
     int lon;
     std::string city;
 };
+
+// helper func:
+double degToRad(double degrees) {return degrees * (M_PI / 180.0);}
+
+//convertation func:
+CordinateEcef convertGpsToEcef(const CordinateGps& gps)
+{
+    // WGS84 Elipsoid Sabitleri
+    const double a = 6378137.0;             // Yarı büyük eksen (Ekvator yarıçapı - metre)
+    const double f = 1.0 / 298.257223563;   // Basıklık oranı
+    const double e2 = 2 * f - f * f;        // Eksantriklik karesi (Eccentricity squared) -> ~0.00669437999
+    
+    // GPS Yüksekliği
+    const double h = 0.0;
+
+    // Girdileri Radyana çevir
+    double latRad = degToRad(gps.lat);
+    double lonRad = degToRad(gps.lon);
+    double N = a / std::sqrt(1 - e2 * std::sin(latRad) * std::sin(latRad));
+
+    CordinateEcef result;
+
+    // ECEF Dönüşüm Formülleri
+    result.x = (N + h) * std::cos(latRad) * std::cos(lonRad);
+    result.y = (N + h) * std::cos(latRad) * std::sin(lonRad);
+    result.z = (N * (1 - e2) + h) * std::sin(latRad);
+
+    return result;
+}
 
 // helper funct: cURL verisini string'e yazma fonksiyonu
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -598,12 +631,21 @@ signed main(int argc, char* argv[])
     
     //GPS to ECEF
     //örnek koordinatlar
-    CordinateEcef SenderCord = {4113913, 3440529, 3440829};
+    //CordinateEcef senderCordEcef = {4113913, 3440529, 3440829};
     
-    CordinateGps tmpCord = getIpLocation();
-    std::cout << "[Test]: " << tmpCord.lon << " " << tmpCord.lat << " " << tmpCord.city << "\n"; 
+    CordinateGps userLocationGps = getIpLocation();
+    std::cout << "[Test]: " << userLocationGps.lon << " " << userLocationGps.lat << " " << userLocationGps.city << "\n"; 
     
-    CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
+    CordinateEcef senderCordEcef = convertGpsToEcef(userLocationGps);
+
+    CordinateGps receiverCordGps;
+    std::cout << "[Input]: Please input the receiver conrdinate {lat, lon}: \n";
+    std::cin >> receiverCordGps.lat >> receiverCordGps.lon;
+
+    CordinateEcef receiverCordEcef = convertGpsToEcef(receiverCordGps);
+
+    receiverCordGps.city = "Unknown";
+
     
     /*
         plaintext: şifrelenecek metin (Geniş karakter stringi olmalı)
@@ -783,10 +825,10 @@ signed main(int argc, char* argv[])
             plainMatrisVec.push_back(block);
         }
 
-        if(timeZone == "first") distance = DisDD(SenderCord, ReceiverCord);
-        else if(timeZone == "second") distance = TetHD(SenderCord, ReceiverCord);
-        else if(timeZone == "third") distance = TruOD(SenderCord, ReceiverCord);
-        else if(timeZone == "fourth") distance = TriOD(SenderCord, ReceiverCord);
+        if(timeZone == "first") distance = DisDD(senderCordEcef, receiverCordEcef);
+        else if(timeZone == "second") distance = TetHD(senderCordEcef, receiverCordEcef);
+        else if(timeZone == "third") distance = TruOD(senderCordEcef, receiverCordEcef);
+        else if(timeZone == "fourth") distance = TriOD(senderCordEcef, receiverCordEcef);
 
         int64_t temp = std::abs(distance);
         while (temp > 0)
@@ -915,10 +957,10 @@ signed main(int argc, char* argv[])
         int64_t distance = 0;
 
         // Anahtar ı hesapla
-        if(timeZone == "first") distance = DisDD(SenderCord, ReceiverCord);
-        else if(timeZone == "second") distance = TetHD(SenderCord, ReceiverCord);
-        else if(timeZone == "third") distance = TruOD(SenderCord, ReceiverCord);
-        else if(timeZone == "fourth") distance = TriOD(SenderCord, ReceiverCord);
+        if(timeZone == "first") distance = DisDD(senderCordEcef, receiverCordEcef);
+        else if(timeZone == "second") distance = TetHD(senderCordEcef, receiverCordEcef);
+        else if(timeZone == "third") distance = TruOD(senderCordEcef, receiverCordEcef);
+        else if(timeZone == "fourth") distance = TriOD(senderCordEcef, receiverCordEcef);
 
         int64_t temp = std::abs(distance);
         while (temp > 0)
