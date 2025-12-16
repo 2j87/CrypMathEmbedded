@@ -23,11 +23,10 @@ struct CordinateEcef
 
 struct CordinateGps
 {
-    int lat;//Enlem x1 000 000 degree
-    int lon;//Boylam x1 000 000 degree
-    int h;
+    int lat;
+    int lon;
+    std::string city;
 };
-
 
 // helper funct: cURL verisini string'e yazma fonksiyonu
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -38,9 +37,9 @@ size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 
 // Get Location:
 // [Location]: 
-void getIpLocation()
+CordinateGps getIpLocation()
 {
-    //CordinateGps returnCordinate;
+    CordinateGps returnCordinate;
     CURL *curl;
     CURLcode res;
     std::string readBuffer;
@@ -64,7 +63,8 @@ void getIpLocation()
 
         if (res != CURLE_OK)
         {
-            fprintf(stderr, "Baglanti Hatasi: %s\n", curl_easy_strerror(res));
+            std::cerr << "Baglanti Hatasi: " << curl_easy_strerror(res) << "\n";
+            //fprintf(stderr, "Baglanti Hatasi: %s\n", curl_easy_strerror(res));
         }
         else
         {
@@ -121,8 +121,8 @@ void getIpLocation()
         curl_easy_cleanup(curl);
     }
 
-    //returnCordinate = {std::stoi(latilute), std::stoi(longitude), 5};
-    //return returnCordinate;
+    returnCordinate = {std::stoi(latilute), std::stoi(longitude), cityPosition};
+    return returnCordinate;
 }
 
 // hexArr türü:
@@ -600,9 +600,8 @@ signed main(int argc, char* argv[])
     //örnek koordinatlar
     CordinateEcef SenderCord = {4113913, 3440529, 3440829};
     
-    getIpLocation();
-    //CordinateGps tmpCord = getIpLocation();
-    //std::cout << tmpCord.lon << " " << tmpCord.lat << " " << tmpCord.h << "\n"; 
+    CordinateGps tmpCord = getIpLocation();
+    std::cout << "[Test]: " << tmpCord.lon << " " << tmpCord.lat << " " << tmpCord.city << "\n"; 
     
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
     
