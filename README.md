@@ -1,13 +1,4 @@
-### Tubitak Project about cryptology 
-
-# Documents
-
-`/build/crypmath` is builted file
-
-> [!Warning]
-> decrypt is not avaible now!
-
-> but encrypt is full fonctional!
+### Tubitak Project about cryptology
 
 # Usage
 
