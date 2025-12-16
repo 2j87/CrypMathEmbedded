@@ -880,7 +880,6 @@ signed main(int argc, char* argv[])
             for(const auto& row : mat)
                 for(int val : row)
                 {
-                    // DEĞİŞİKLİK: char yerine wchar_t
                     wchar_t ch = intToChar(val);
                     if(ch != 0) plaintext.push_back(ch);
                 }
