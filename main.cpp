@@ -8,123 +8,65 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <locale>
 
 using vec2 = std::vector<std::vector<int>>;
 
-int charToInt(char ch)
+// hexArr türü:
+struct CharMap
 {
-    int arr[] = {1, 2, 3, 4, 5, 6, 7,8, 9,10,11, 20, 22, 24, 26, 28, 30, 32, 34, 35, 59, 62, 65, 68, 71, 74, 77,80,81,127,131,
-135,139,143,147,151,155,156, 231, 236, 241, 246, 251, 256, 261, 266, 267, 378, 384, 390, 396, 402,
-408, 414, 420, 421, 575, 582, 589, 596, 603, 610, 617, 624, 625,829,837,845,853,861,869,877,885,
-886,1165,1174,1183,1192,1201,1210,1211,1536,1546,1556,1566,1576,1586,1606,1607, 2014};
+    wchar_t ch;
+    int val;
+};
 
-    int retrn = -1;
-    switch(ch)
-    {
-        case 'A': retrn = arr[0]; break;
-        case 'B': retrn = arr[1]; break;
-        case 'C': retrn = arr[2]; break;
-        case 'D': retrn = arr[3]; break;
-        case 'E': retrn = arr[4]; break;
-        case 'F': retrn = arr[5]; break;
-        case 'G': retrn = arr[6]; break;
-        case 'H': retrn = arr[7]; break;
-        case 'I': retrn = arr[8]; break;
-        case 'J': retrn = arr[9]; break;
-        case 'K': retrn = arr[10]; break;
-        case 'L': retrn = arr[11]; break;
-        case 'M': retrn = arr[12]; break;
-        case 'N': retrn = arr[13]; break;
-        case 'O': retrn = arr[14]; break;
-        case 'P': retrn = arr[15]; break;
-        case 'Q': retrn = arr[16]; break;
-        case 'R': retrn = arr[17]; break;
-        case 'S': retrn = arr[18]; break;
-        case 'T': retrn = arr[19]; break;
-        case 'U': retrn = arr[20]; break;
-        case 'V': retrn = arr[21]; break;
-        case 'W': retrn = arr[22]; break;
-        case 'X': retrn = arr[23]; break;
-        case 'Y': retrn = arr[24]; break;
-        case 'Z': retrn = arr[25]; break;
-        case 'a': retrn = arr[26]; break;
-        case 'b': retrn = arr[27]; break;
-        case 'c': retrn = arr[28]; break;
-        case 'd': retrn = arr[29]; break;
-        case 'e': retrn = arr[30]; break;
-        case 'f': retrn = arr[31]; break;
-        case 'g': retrn = arr[32]; break;
-        case 'h': retrn = arr[33]; break;
-        case 'i': retrn = arr[34]; break;
-        case 'j': retrn = arr[35]; break;
-        case 'k': retrn = arr[36]; break;
-        case 'l': retrn = arr[37]; break;
-        case 'm': retrn = arr[38]; break;
-        case 'n': retrn = arr[39]; break;
-        case 'o': retrn = arr[40]; break;
-        case 'p': retrn = arr[41]; break;
-        case 'q': retrn = arr[42]; break;
-        case 'r': retrn = arr[43]; break;
-        case 's': retrn = arr[44]; break;
-        case 't': retrn = arr[45]; break;
-        case 'u': retrn = arr[46]; break;
-        case 'v': retrn = arr[47]; break;
-        case 'w': retrn = arr[48]; break;
-        case 'x': retrn = arr[49]; break;
-        case 'y': retrn = arr[50]; break;
-        case 'z': retrn = arr[51]; break;
-        case '.': retrn = arr[52]; break;
-        case '(': retrn = arr[53]; break;
-        case ')': retrn = arr[54]; break;
-        case ',': retrn = arr[55]; break;
-        case ';': retrn = arr[56]; break;
-        case ':': retrn = arr[57]; break;
-        case '\'':retrn = arr[58]; break;
-        case '@': retrn = arr[59]; break;
-        case '"': retrn = arr[60]; break;
-        case '?': retrn = arr[61]; break;
-        case '!': retrn = arr[62]; break;
-        case '/': retrn = arr[63]; break;
-        case '-': retrn = arr[64]; break;
-        case '+': retrn = arr[65]; break;
-        case '=': retrn = arr[66]; break;
-        case ' ': retrn = arr[67]; break;
-        case '0': retrn = arr[68]; break;
-        case '1': retrn = arr[69]; break;
-        case '2': retrn = arr[70]; break;
-        case '3': retrn = arr[71]; break;
-        case '4': retrn = arr[72]; break;
-        case '5': retrn = arr[73]; break;
-        case '6': retrn = arr[74]; break;
-        case '7': retrn = arr[75]; break;
-        case '8': retrn = arr[76]; break;
-        case '9': retrn = arr[77]; break;
-    }
+// hexagonal sayılar dizisi
+const std::vector<CharMap> hexArr = {
 
-    return retrn;
+    // büyük harfler 
+    {L'A', 1}, {L'B', 2}, {L'C', 3}, {L'Ç', 4}, {L'D', 5}, {L'E', 6}, {L'F', 7}, 
+    {L'G', 8}, {L'Ğ', 9}, {L'H', 10}, {L'I', 11}, {L'İ', 20}, {L'J', 22}, {L'K', 24}, 
+    {L'L', 26}, {L'M', 28}, {L'N', 30}, {L'O', 32}, {L'Ö', 34}, {L'P', 35}, {L'Q', 59}, 
+    {L'R', 62}, {L'S', 65}, {L'Ş', 68}, {L'T', 71}, {L'U', 74}, {L'Ü', 77}, {L'V', 80}, 
+    {L'W', 81}, {L'X', 127}, {L'Y', 131}, {L'Z', 135},
+
+    // küçük harfler
+    {L'a', 139}, {L'b', 143}, {L'c', 147}, {L'ç', 151}, {L'd', 155}, {L'e', 156}, 
+    {L'f', 231}, {L'g', 236}, {L'ğ', 241}, {L'h', 246}, {L'ı', 251}, {L'i', 256}, 
+    {L'j', 261}, {L'k', 266}, {L'l', 267}, {L'm', 378}, {L'n', 384}, {L'o', 390}, 
+    {L'ö', 396}, {L'p', 402}, {L'q', 408}, {L'r', 414}, {L's', 420}, {L'ş', 421}, 
+    {L't', 575}, {L'u', 582}, {L'ü', 589}, {L'v', 596}, {L'w', 603}, {L'x', 610}, 
+    {L'y', 617}, {L'z', 624},
+
+    // özel karakterler
+    {L'.', 625}, {L'(', 829}, {L')', 837}, {L',', 845}, {L';', 853}, {L':', 861}, 
+    {L'‘', 869}, {L'@', 877}, {L'“', 885}, {L'?', 886}, {L'!', 165}, {L'/', 174}, 
+    {L'-', 183}, {L'+', 192}, {L'=', 201}, {L' ', 210},
+
+    // sayılar
+    {L'0', 211}, {L'1', 536}, {L'2', 546}, {L'3', 556}, {L'4', 566}, {L'5', 576}, 
+    {L'6', 586}, {L'7', 606}, {L'8', 607}, {L'9', 14}
+};
+
+// wchar_t ve int dönüştürme fonksiyonları:
+//charToInt
+//intToChar
+
+int charToInt(wchar_t character)
+{
+    for (const CharMap& entry : hexArr)
+        if (entry.ch == character)
+            return entry.val;
+
+    return -1;
 }
 
-// Helper function to reverse charToInt
-char intToChar(int val)
+wchar_t intToChar(int val)
 {
-    int arr[] = {1, 2, 3, 4, 5, 6, 7,8, 9,10,11, 20, 22, 24, 26, 28, 30, 32, 34, 35, 59, 62, 65, 68, 71, 74, 77,80,81,127,131,
-    135,139,143,147,151,155,156, 231, 236, 241, 246, 251, 256, 261, 266, 267, 378, 384, 390, 396, 402,
-    408, 414, 420, 421, 575, 582, 589, 596, 603, 610, 617, 624, 625,829,837,845,853,861,869,877,885,
-    886,1165,1174,1183,1192,1201,1210,1211,1536,1546,1556,1566,1576,1586,1606,1607, 2014};
+    for (const CharMap& entry : hexArr)
+        if (entry.val == val)
+            return entry.ch;
 
-    // Mapping indices to chars based on charToInt switch order
-    const char chars[] = {
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-        '.', '(', ')', ',', ';', ':', '\'', '@', '"', '?', '!', '/', '-', '+', '=', ' ',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-    };
-
-    int size = sizeof(arr)/sizeof(arr[0]);
-    for(int i = 0; i < size; ++i) {
-        if(arr[i] == val) return chars[i];
-    }
-    return 0; // Null char for padding/not found
+    return L'\0'; 
 }
 
 struct CordinateEcef
@@ -277,7 +219,7 @@ vec2 hadamardMul(vec2 A, vec2 B)
     return matris;
 }
 
-// INVERSE Hadamard (Decrypt)
+// inverse Hadamard (Decrypt)
 // C = A * B => B = C / A
 vec2 inverseHadamardMul(vec2 A, vec2 C)
 {
@@ -543,6 +485,10 @@ vec2 inverseKhatriRaoMul(vec2 A, vec2 C)
 }
 
 //main lo
+// int62_t
+// int
+// signed = signed int
+// long long = long long int
 signed main(int argc, char* argv[])
 {
     //time->tm_hour // saat
@@ -558,11 +504,11 @@ signed main(int argc, char* argv[])
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
     
     /*
-        plaintext: şifrelenecek metin
+        plaintext: şifrelenecek metin (Geniş karakter stringi olmalı)
         ciphertext: şifrelenmiş, deşifrelenecek metin
         operation: yapılacak işlem, şifreleme/deşifreleme
     */
-    std::string plaintext = "";
+    std::wstring plaintext = L""; // DEĞİŞİKLİK: wstring kullanıldı
     std::vector<int> ciphertext;
     std::string operation;// ecrypt/decrypt/empty
 
@@ -598,44 +544,55 @@ signed main(int argc, char* argv[])
     }
 
     // Operasyon ayarları yapma:
+    // inputların alınması : 
     std::cout << "[Operation]: ";
     if(operation == "encrypt")
     {
         std::cout << "Encryption\n";
+        
         if(isInputFile)
         {
-            std::ifstream inputFile(inputFilePath);
-            char c;
+            // buffer ile okuma
+            std::wifstream inputFile(inputFilePath);
+            inputFile.imbue(std::locale("")); // UTF-8 ve Türkçe karakter desteği
 
             try
             {
                 if(inputFile.is_open())
                 {
-                    while (inputFile >> c)
-                        plaintext.push_back(c);
-                        
+                    std::wstringstream wss;
+                    wss << inputFile.rdbuf();
+                    plaintext = wss.str();
+
                     inputFile.close();
                 }
-                else throw std::string("fileCantOpen");
+                else 
+                {
+                    throw std::string("fileCantOpen");
+                }
             }
             catch(std::string e)
             {
-                if(e == "fileCantOpen") std::cerr << "[Error]: Input file cant opened: " << inputFilePath << "\n";
+                if(e == "fileCantOpen") 
+                    std::cerr << "[Error]: Input file cant opened: " << inputFilePath << "\n";
+                return 1; 
             }
         }
         else
         {
             std::cout << "[Input]: Enter input: ";
-            std::cin >> plaintext;
+            std::getline(std::wcin, plaintext); 
         }
 
-        
         if(!plaintext.empty()) std::cout << "[Input]: Succesful\n";
         std::cout << "[Input]: Input size: " << plaintext.size() << "\n";
 
         //input yoksa işlem yok:
-        if(plaintext.empty()) throw;
-
+        if(plaintext.empty())
+        {
+            std::cerr << "[Error]: input is empty\n";
+            exit(1);
+        }
     }
     else if(operation == "decrypt")
     {
@@ -712,7 +669,7 @@ signed main(int argc, char* argv[])
 
         for (size_t i = 0; i < intPlaintext.size(); i += 16)
         {
-            if(intPlaintext[i] == -1) throw std::invalid_argument("Input have non-english character\n");
+            if(intPlaintext[i] == -1) throw std::invalid_argument("Input have non-defined character\n");
 
             //ile önce block'a yazıp sonra bloks a eklio 
             vec2 block(4, std::vector<int>(4));
@@ -923,25 +880,31 @@ signed main(int argc, char* argv[])
             for(const auto& row : mat)
                 for(int val : row)
                 {
-                    char ch = intToChar(val);
+                    // DEĞİŞİKLİK: char yerine wchar_t
+                    wchar_t ch = intToChar(val);
                     if(ch != 0) plaintext.push_back(ch);
                 }
 
         // Output
         if(outputFilePath.empty()) outputFilePath = "output.txt";
-        std::ofstream outputFile(outputFilePath);
+        
+        std::wofstream outputFile(outputFilePath);
+        outputFile.imbue(std::locale("")); // Türkçe karakter desteği
+
         if(!outputFile.is_open()) 
             std::cerr << "[Error]: Output file cant opened\n";
         else
         {
             outputFile << plaintext;
             outputFile.close();
-            std::cout << "[Output]: Decrypted text: " << plaintext << "\n";
+            
+            std::wcout << "[Output]: Decrypted text: " << plaintext << "\n";
             std::cout << "[Output]: Output file: " << outputFilePath << "\n";
             std::cout << "[Output]: Succesful\n";
         }
     }
 
-    // wow
+    // wowie
     return 0;
 }
+// version 2.0
