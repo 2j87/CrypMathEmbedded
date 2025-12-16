@@ -9,8 +9,111 @@
 #include <string>
 #include <sstream>
 #include <locale>
+#include <curl/curl.h>
 
 using vec2 = std::vector<std::vector<int>>;
+
+struct CordinateEcef
+{
+    //meter type
+    double x;
+    double y;
+    double z;
+};
+
+struct CordinateGps
+{
+    int GpsLat;//Enlem x1 000 000 degree
+    int GpsLon;//Boylam x1 000 000 degree
+};
+
+
+// helper funct: cURL verisini string'e yazma fonksiyonu
+size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    ((std::string *)userp)->append((char *)contents, size * nmemb);
+    return size * nmemb;
+}
+
+// Get Location:
+// [Location]: 
+CordinateGps getIpLocation()
+{
+    CordinateGps returnCordinate;
+    CURL *curl;
+    CURLcode res;
+    std::string readBuffer;
+    std::string Latilute, Longitude;
+
+    curl = curl_easy_init();
+    if(curl)
+    {
+        // Ücretsiz, keysiz IP API servisi
+        std::string url = "http://ip-api.com/json/";
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        // Hızlı sonuç için timeout koyalım (5 saniye)
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
+
+        std::cout << "IP servisine baglaniliyor..." << "\n";
+        res = curl_easy_perform(curl);
+
+        if (res != CURLE_OK)
+        {
+            fprintf(stderr, "Baglanti Hatasi: %s\n", curl_easy_strerror(res));
+        }
+        else
+        {
+            std::cout << "[Location]: Found succesfuly\n" << "\n";
+            // JSON parse işlemi (Basit string arama)
+
+            // Şehir
+            size_t cityPos = readBuffer.find("\"city\":\"");
+            if (cityPos != std::string::npos)
+            {
+                size_t end = readBuffer.find("\"", cityPos + 8);
+                std::cout << "[Location]: City : "
+                        << readBuffer.substr(cityPos + 8, end - (cityPos + 8))
+                        << "\n";
+            }
+
+            // Enlem (Lat)
+            size_t latPos = readBuffer.find("\"lat\":");
+            if (latPos != std::string::npos)
+            {
+                size_t end = readBuffer.find(",", latPos);
+
+                Latilute = readBuffer.substr(latPos + 6, end - (latPos + 6));
+
+                std::cout << "[Location]: Latitude: "
+                        << Latilute
+                        << "\n";
+            }
+
+            // Boylam (Lon)
+            size_t lonPos = readBuffer.find("\"lon\":");
+            if (lonPos != std::string::npos)
+            {
+                size_t end = readBuffer.find(",", lonPos);
+
+                Longitude = readBuffer.substr(latPos + 6, end - (latPos + 6));
+
+                std::cout << "[Location]: Longitude: "
+                        << Longitude
+                        << "\n";
+            }
+
+            std::cout << "[Warning]: This location is your internet service provider's central office location.\n";
+        }
+
+        curl_easy_cleanup(curl);
+    }
+
+    return returnCordinate;
+}
 
 // hexArr türü:
 struct CharMap
@@ -50,7 +153,6 @@ const std::vector<CharMap> hexArr = {
 // wchar_t ve int dönüştürme fonksiyonları:
 //charToInt
 //intToChar
-
 int charToInt(wchar_t character)
 {
     for (const CharMap& entry : hexArr)
@@ -68,20 +170,6 @@ wchar_t intToChar(int val)
 
     return L'\0'; 
 }
-
-struct CordinateEcef
-{
-    //meter type
-    double x;
-    double y;
-    double z;
-};
-
-struct CordinateGps
-{
-    int GpsLat;//Enlem x1 000 000 degree
-    int GpsLon;//Boylam x1 000 000 degree
-};
 
 //Disdyakis Dodecahedron distance
 int64_t DisDD(CordinateEcef s, CordinateEcef r)
@@ -501,6 +589,9 @@ signed main(int argc, char* argv[])
     //GPS to ECEF
     //örnek koordinatlar
     CordinateEcef SenderCord = {4113913, 3440529, 3440829};
+    
+    //CordinateEcef SenderCord = getIpLocation();
+    
     CordinateEcef ReceiverCord = {1118567, 902131, -6193309};
     
     /*
