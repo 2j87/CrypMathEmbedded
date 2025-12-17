@@ -28,11 +28,11 @@ default input is terminal
 
 ## Simple Chart
 
-| **flag** | **usage** |
-| `--encrypt` | starts by encrypt mode |
-| `--decrypt` | starts by decrypt mode |
-| `-o` | assigns output file |
-| `-r` | assigns input file |
+| **flag** | **usage** | 
+| `--encrypt` | starts by encrypt mode | 
+| `--decrypt` | starts by decrypt mode | 
+| `-o` | assigns output file | 
+| `-r` | assigns input file | 
 
 
 compile example : 
