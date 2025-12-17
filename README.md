@@ -1,57 +1,62 @@
-### Tubitak Project about cryptology
+# CrypMath
 
-# Usage
+CrypMath is a hybrid encryption tool that combines C++ performance with a modern Python GUI. It uses a custom mathematical encryption algorithm based on 3D coordinate systems and matrix operations.
 
-> [!Warning]
-> You must encrypt or decrypt
+## Features
 
-> [!Warning]
-> while compile dont forget use `-lcurl` flag for library curl
+### 1. Encryption & Decryption
+-   **Custom Algorithm**: Uses ECEF coordinates, magic matrices, and complex geometric distances (Disdyakis Dodecahedron, etc.) for encryption.
+-   **High Performance**: Core logic is written in C++ for speed.
+-   **File-Based**: Processes text files for input and output.
 
-for install curl library (int linux/ubuntu):
-```bash
-sudo apt-get install libcurl4-openssl-dev
-```
+### 2. Modern GUI
+-   **Dark Theme**: Sleek, modern interface with a dark color scheme.
+-   **Full Screen**: Designed for immersive usage.
+-   **User Friendly**: Simple tabs for Encryption, Decryption, and Tools.
 
-encrypt:
+### 3. Integrated GPS Tools
+-   **Built-in Maps**: Open Google Maps directly from the application.
+-   **Coordinate Extraction**: Paste a Google Maps URL to automatically extract Latitude and Longitude.
+-   **One-Click Copy**: Easily copy coordinates for use in encryption.
 
-`./build/crypmath --encrypt`
+## Installation
 
-decrypt:
+### Prerequisites
+-   **Linux** (Tested on Ubuntu/Debian)
+-   **Python 3** with `PyQt5`
+    ```bash
+    sudo apt install python3-pyqt5
+    ```
+-   **G++ Compiler**
+    ```bash
+    sudo apt install g++
+    ```
+-   **libcurl** (for C++ IP location)
+    ```bash
+    sudo apt install libcurl4-openssl-dev
+    ```
 
-`./build/crypmath --decrypt`
+### Build
+1.  Compile the C++ engine:
+    ```bash
+    mkdir -p build
+    g++ main.cpp -o build/crypmath -lcurl
+    ```
 
-assign output file:
-default ouputfile is "output.txt"
+## Usage
+1.  Run the Python GUI:
+    ```bash
+    python3 guiApp.py
+    ```
+2.  **Encryption**:
+    -   Enter Receiver GPS coordinates (or use the GPS Tools tab).
+    -   Type your message.
+    -   Click "Şifrele".
+3.  **Decryption**:
+    -   Select the encrypted file.
+    -   Click "Deşifrele".
 
-`./build/crypmath --encrypt -o output.txt`
-
-assign input file:
-default input is terminal
-
-`./build/crypmath --encrypt -r input.txt`
-
-## Simple Chart
-
-| **flag** | **usage** | 
-|:---|:---|
-| `--encrypt` | starts by encrypt mode | 
-| `--decrypt` | starts by decrypt mode | 
-| `-o` | assigns output file | 
-| `-r` | assigns input file | 
-
-
-compile example : 
-```bash
-g++ main.cpp -o ./build/crypmath -Wall -Wextra -O2 -lcurl
-```
-
-encrypt example : 
-```bash
-./build/crypmath -encrypt -r ./build/input.txt -o ./build/output.txt
-```
-
-decrypt example : 
-```bash
-./build/crypmath -decrypt -r ./build/output.txt -o ./build/outputDecrypt.txt
-```
+## Project Structure
+-   `main.cpp`: The core C++ encryption engine.
+-   `guiApp.py`: The Python PyQt5 graphical interface.
+-   `build/`: Directory containing the compiled executable.
