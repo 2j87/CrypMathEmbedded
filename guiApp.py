@@ -236,7 +236,7 @@ class crypto_app(QWidget):
         btn_open = QPushButton("Google Maps'i Aç")
         btn_open.setFixedWidth(300)
         btn_open.setStyleSheet(widget_style)
-        btn_open.clicked.connect(lambda: webbrowser.open("https://www.google.com/maps"))
+        btn_open.clicked.connect(lambda: webbrowser.open("https://www.google.com/maps"))# Ai code
         layout.addWidget(btn_open, alignment=Qt.AlignCenter)
         
         self.url_in = QLineEdit()

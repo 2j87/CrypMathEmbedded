@@ -36,12 +36,35 @@ CrypMath is a hybrid encryption tool that combines C++ performance with a modern
     sudo apt install libcurl4-openssl-dev
     ```
 
-### Build
+### Build (Linux)
 1.  Compile the C++ engine:
     ```bash
     mkdir -p build
+    cd build
+    cmake ..
+    make
+    ```
+    *Alternatively, use g++ directly:*
+    ```bash
     g++ main.cpp -o build/crypmath -lcurl
     ```
+
+### Build (Windows)
+1.  **Install Dependencies**:
+    -   Python 3.x
+    -   PyQt5 (`pip install PyQt5`)
+    -   CMake
+    -   MinGW or Visual Studio (C++ Compiler)
+    -   libcurl (Development libraries)
+
+2.  **Compile**:
+    ```powershell
+    mkdir build
+    cd build
+    cmake ..
+    cmake --build . --config Release
+    ```
+    *Ensure `crypmath.exe` is in the `build` folder.*
 
 ## Usage
 1.  Run the Python GUI:
@@ -59,4 +82,5 @@ CrypMath is a hybrid encryption tool that combines C++ performance with a modern
 ## Project Structure
 -   `main.cpp`: The core C++ encryption engine.
 -   `guiApp.py`: The Python PyQt5 graphical interface.
+-   `CMakeLists.txt`: Build configuration.
 -   `build/`: Directory containing the compiled executable.
