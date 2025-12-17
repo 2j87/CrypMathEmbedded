@@ -12,7 +12,8 @@ encrypt:
 
 `./build/crypmath --encrypt`
 
-decrypt: 
+decrypt:
+
 `./build/crypmath --decrypt`
 
 assign output file:
