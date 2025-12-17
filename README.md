@@ -40,3 +40,13 @@ compile example :
 ```bash
 g++ main.cpp -o ./build/crypmath -Wall -Wextra -O2 -lcurl
 ```
+
+encrypt example : 
+```bash
+./build/crypmath -encrypt -r ./build/input.txt -o ./build/output.txt
+```
+
+decrypt example : 
+```bash
+./build/crypmath -decrypt -r ./build/output.txt -o ./build/outputDecrypt.txt
+```
