@@ -154,7 +154,22 @@ CordinateGps getIpLocation()
         curl_easy_cleanup(curl);
     }
 
-    returnCordinate = {std::stoi(latilute), std::stoi(longitude), cityPosition};
+    // sık karşılaşılan hata giderme : 
+    try
+    {
+        returnCordinate = {std::stoi(latilute), std::stoi(longitude), cityPosition};
+    }
+    catch(const std::invalid_argument& e)
+    {
+        std::cerr << "[Error]: " << e.what() << " : std::stoi in getIpLocation()\n";
+        returnCordinate = {40, 40, cityPosition};
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "[Error]: " << e.what() << ": in getIpLocation()\n";
+        returnCordinate = {40, 40, "Unknown"};
+    }
+    
     return returnCordinate;
 }
 
