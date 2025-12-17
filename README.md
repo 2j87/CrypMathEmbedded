@@ -8,6 +8,11 @@
 > [!Warning]
 > while compile dont forget use `-lcurl` flag for library curl
 
+for install curl library (int linux/ubuntu):
+```bash
+sudo apt-get install libcurl4-openssl-dev
+```
+
 encrypt:
 
 `./build/crypmath --encrypt`
