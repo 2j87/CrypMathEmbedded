@@ -17,12 +17,14 @@ if sys.platform == 'win32':
 else:
     EXEC_NAME = 'crypmath'
 
-CRYPTO_EXEC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build', EXEC_NAME)
+ROOT_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-# default file names
-DEF_IN_FILE = '../logs/input_plaintext.txt'
-DEF_OUT_FILE = '../logs/output_ciphertext.txt'
-DEF_DEC_FILE = '../logs/output_decrypted.txt'
+CRYPTO_EXEC = os.path.normpath(os.path.join(ROOT_DIR, 'build', EXEC_NAME))
+
+IO_DIR = os.path.normpath(os.path.join(ROOT_DIR, 'io'))
+DEF_IN_FILE = os.path.join(IO_DIR, 'input_plaintext.txt')
+DEF_OUT_FILE = os.path.join(IO_DIR, 'output_ciphertext.txt')
+DEF_DEC_FILE = os.path.join(IO_DIR, 'output_decrypted.txt')
 
 class crypto_app(QWidget):
     def __init__(self):
@@ -336,7 +338,8 @@ class crypto_app(QWidget):
                 f.write(text)
             
             out_path = self.enc_out_path.text()
-            args = ['--encrypt', '-r', DEF_IN_FILE, '-o', out_path]
+            out_path = os.path.abspath(self.enc_out_path.text())
+            args = ['--encrypt', '-r',  os.path.abspath(DEF_IN_FILE), '-o', out_path]
             console = self.enc_console
             
         elif op == "decrypt":

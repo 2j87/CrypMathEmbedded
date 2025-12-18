@@ -10,6 +10,9 @@
 #include <sstream>
 #include <locale>
 #include <curl/curl.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -700,6 +703,32 @@ signed main(int argc, char* argv[])
             inputFilePath = tmp;
             isInputFile = true;
         }
+    }
+
+    try
+    {
+        if(!inputFilePath.empty())
+        {
+            fs::path p = fs::path(inputFilePath);
+            inputFilePath = fs::absolute(p).string();
+            // optionally: inputFilePath = fs::weakly_canonical(p).string();
+        }
+    }
+    catch(const fs::filesystem_error &e)
+    {
+        std::cerr << "[Warning]: filesystem error while resolving input path: " << e.what() << "\n";
+    }
+    try
+    {
+        if(!outputFilePath.empty())
+        {
+            fs::path p2 = fs::path(outputFilePath);
+            outputFilePath = fs::absolute(p2).string();
+        }
+    }
+    catch(const fs::filesystem_error &e)
+    {
+        std::cerr << "[Warning]: filesystem error while resolving output path: " << e.what() << "\n";
     }
 
     // Operasyon ayarları yapma:
