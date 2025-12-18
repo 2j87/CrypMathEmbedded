@@ -11,7 +11,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QProcess, Qt
 
 # path to executable
-CRYPTO_EXEC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build', 'crypmath')
+# path to executable
+if sys.platform == 'win32':
+    EXEC_NAME = 'crypmath.exe'
+else:
+    EXEC_NAME = 'crypmath'
+
+CRYPTO_EXEC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build', EXEC_NAME)
 
 # default file names
 DEF_IN_FILE = 'input_plaintext.txt'
@@ -236,7 +242,7 @@ class crypto_app(QWidget):
         btn_open = QPushButton("Google Maps'i Aç")
         btn_open.setFixedWidth(300)
         btn_open.setStyleSheet(widget_style)
-        btn_open.clicked.connect(lambda: webbrowser.open("https://www.google.com/maps"))# Ai code
+        btn_open.clicked.connect(lambda: webbrowser.open("https://www.google.com/maps"))
         layout.addWidget(btn_open, alignment=Qt.AlignCenter)
         
         self.url_in = QLineEdit()
@@ -326,7 +332,7 @@ class crypto_app(QWidget):
                 QMessageBox.warning(self, "Uyarı", "Metin girin.")
                 return
             
-            with open(DEF_IN_FILE, 'w') as f:
+            with open(DEF_IN_FILE, 'w', encoding='utf-8') as f:
                 f.write(text)
             
             out_path = self.enc_out_path.text()
@@ -356,13 +362,13 @@ class crypto_app(QWidget):
 
     # handle stdout
     def handle_out(self):
-        data = self.proc.readAllStandardOutput().data().decode()
+        data = self.proc.readAllStandardOutput().data().decode('utf-8', errors='replace')
         
         # send input if asked
         if "[Input]: Please input" in data:
              # get receiver gps
             gps = self.recv_gps.text()
-            self.proc.write(f"{gps}\n".encode())
+            self.proc.write(f"{gps}\n".encode('utf-8'))
 
         if self.curr_op == "encrypt":
             self.enc_console.append(data.strip())
@@ -371,7 +377,7 @@ class crypto_app(QWidget):
 
     # handle stderr
     def handle_err(self):
-        data = self.proc.readAllStandardError().data().decode()
+        data = self.proc.readAllStandardError().data().decode('utf-8', errors='replace')
         if self.curr_op == "encrypt":
             self.enc_console.append(f"ERR: {data.strip()}")
         else:
@@ -386,7 +392,7 @@ class crypto_app(QWidget):
             
             if self.curr_op == "decrypt":
                 try:
-                    with open(self.dec_out_path.text(), 'r') as f:
+                    with open(self.dec_out_path.text(), 'r', encoding='utf-8') as f:
                         self.plain_out.setText(f.read())
                 except:
                     QMessageBox.critical(self, "Hata", "Dosya okunamadı.")
