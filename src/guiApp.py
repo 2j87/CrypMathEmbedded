@@ -20,9 +20,9 @@ else:
 CRYPTO_EXEC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build', EXEC_NAME)
 
 # default file names
-DEF_IN_FILE = 'input_plaintext.txt'
-DEF_OUT_FILE = 'output_ciphertext.txt'
-DEF_DEC_FILE = 'output_decrypted.txt'
+DEF_IN_FILE = '../logs/input_plaintext.txt'
+DEF_OUT_FILE = '../logs/output_ciphertext.txt'
+DEF_DEC_FILE = '../logs/output_decrypted.txt'
 
 class crypto_app(QWidget):
     def __init__(self):
