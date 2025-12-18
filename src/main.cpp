@@ -100,7 +100,6 @@ CordinateGps getIpLocation()
         if (res != CURLE_OK)
         {
             std::cerr << "Baglanti Hatasi: " << curl_easy_strerror(res) << "\n";
-            //fprintf(stderr, "Baglanti Hatasi: %s\n", curl_easy_strerror(res));
         }
         else
         {
@@ -659,6 +658,8 @@ signed main(int argc, char* argv[])
     CordinateGps receiverCordGps;
     std::cout << "[Input]: Please input the receiver conrdinate {lat, lon}: \n";
     std::cin >> receiverCordGps.lat >> receiverCordGps.lon;
+    std::cout << "[Input]: Receiver coordinates: ";
+    std::cout << "Latitude: " << receiverCordGps.lat << " Longitude: " << receiverCordGps.lon << "\n";
 
     CordinateEcef receiverCordEcef = convertGpsToEcef(receiverCordGps);
 
