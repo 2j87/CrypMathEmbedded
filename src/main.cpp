@@ -650,7 +650,10 @@ signed main(int argc, char* argv[])
     //örnek koordinatlar
     //CordinateEcef senderCordEcef = {4113913, 3440529, 3440829};
     
-    CordinateGps userLocationGps = getIpLocation();
+    CordinateGps userLocationGps;// = getIpLocation();
+    std::cout << "[Input] Please input the sender coordinates: \n";
+    int a, b;
+    std::cin >> a >> b; userLocationGps.lat = a; userLocationGps.lon = b;
     std::cout << "[Test]: " << userLocationGps.lon << " " << userLocationGps.lat << " " << userLocationGps.city << "\n"; 
     
     CordinateEcef senderCordEcef = convertGpsToEcef(userLocationGps);
@@ -678,6 +681,8 @@ signed main(int argc, char* argv[])
     std::string outputFilePath;
     std::string inputFilePath;
     bool isInputFile = false;
+    bool isTimeInput = false;
+    int InputHour = 0;
 
     for(int i = 1; i < argc; ++i)
     {
@@ -703,6 +708,12 @@ signed main(int argc, char* argv[])
             std::string tmp = argv[++i];
             inputFilePath = tmp;
             isInputFile = true;
+        } 
+        else if(arg == "-t" && i+1 < argc)
+        {
+            isTimeInput = true;
+            // girdinin saat cinsinden girilmesi gerekiyor
+            InputHour = std::stoi(argv[++i]);
         }
     }
 
@@ -829,14 +840,24 @@ signed main(int argc, char* argv[])
         if(!ciphertext.empty()) std::cout << "[Input]: Succesful\n";
         std::cout << "[Input]: Input size: " << ciphertext.size() << "\n";
     }
-
+    
     std::string timeZone;
-    int timeInt = time->tm_hour;
-    if(timeInt < 6) timeZone = "first";
-    else if(timeInt < 12) timeZone = "second";
-    else if(timeInt < 18) timeZone = "third";
-    else if(timeInt < 24) timeZone = "fourth";
-
+    if (!isTimeInput)
+    {
+        int timeInt = time->tm_hour;
+        if(timeInt < 6) timeZone = "first";
+        else if(timeInt < 12) timeZone = "second";
+        else if(timeInt < 18) timeZone = "third";
+        else if(timeInt < 24) timeZone = "fourth";
+    }
+    else if(isTimeInput)
+    {
+        if(InputHour < 6) timeZone = "first";
+        else if(InputHour < 12) timeZone = "second";
+        else if(InputHour < 18) timeZone = "third";
+        else if(InputHour < 24) timeZone = "fourth";
+    
+    }
     // şifreleme:
     if(operation == "encrypt")
     {
