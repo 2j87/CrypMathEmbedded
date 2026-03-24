@@ -1,4 +1,4 @@
-# EmbedCrypMath — Air-Gapped Hardware Encryption Module
+# CrypMath-Embedded Version
 
 > A custom cryptographic engine running on STM32H750, completely isolated from the internet and operating systems. All I/O is handled through a hardware SD card module (SDMMC), preventing any sensitive data from leaking to a computer or network.
 
