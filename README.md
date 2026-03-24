@@ -13,7 +13,7 @@
 
 ---
 
-## 🔩 Hardware Requirements
+##  Hardware Requirements
 
 ### Main Board — WeAct Studio MiniSTM32H750VBTX
 
@@ -230,6 +230,6 @@ EmbedCrypMath/
 
 ---
 
-## 📄 License
+##  License
 
-This project is open source. Feel free to use, modify and distribute.
+You can find details from LICENSE.md file
